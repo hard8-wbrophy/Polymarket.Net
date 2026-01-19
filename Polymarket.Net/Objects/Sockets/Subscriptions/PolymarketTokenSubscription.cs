@@ -6,6 +6,8 @@ using Microsoft.Extensions.Logging;
 using Polymarket.Net.Clients.ClobApi;
 using Polymarket.Net.Objects.Models;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Polymarket.Net.Objects.Sockets.Subscriptions
 {
@@ -17,7 +19,7 @@ namespace Polymarket.Net.Objects.Sockets.Subscriptions
         private readonly Action<DataEvent<PolymarketLastTradePriceUpdate>>? _lastTradePriceHandler;
         private readonly Action<DataEvent<PolymarketTickSizeUpdate>>? _lastTickSizeHandler;
         private readonly Action<DataEvent<PolymarketBestBidAskUpdate>>? _bidAskUpdateHandler;
-        private readonly string[] _assetIds;
+        private readonly string[] _tokenIds;
 
         private PolymarketSocketClientClobApi _client;
 
@@ -27,7 +29,7 @@ namespace Polymarket.Net.Objects.Sockets.Subscriptions
         public PolymarketTokenSubscription(
             ILogger logger,
             PolymarketSocketClientClobApi client,
-            string[] assetIds,
+            string[] tokenIds,
             Action<DataEvent<PolymarketPriceChangeUpdate>>? priceChangeHandler,
             Action<DataEvent<PolymarketBookUpdate>>? bookHandler,
             Action<DataEvent<PolymarketLastTradePriceUpdate>>? lastTradePriceHandler,
@@ -41,28 +43,33 @@ namespace Polymarket.Net.Objects.Sockets.Subscriptions
             _lastTradePriceHandler = lastTradePriceHandler;
             _lastTickSizeHandler = tickSizeUpdateHandler;
             _bidAskUpdateHandler = bidAskUpdateHandler;
-            _assetIds = assetIds;
+            _tokenIds = tokenIds;
 
-            MessageRouter = MessageRouter.Create([
-                MessageRoute<PolymarketPriceChangeUpdate>.CreateWithoutTopicFilter("price_change", DoHandleMessage),
-                MessageRoute<PolymarketBookUpdate>.CreateWithoutTopicFilter("book", DoHandleMessage),
-                MessageRoute<PolymarketBookUpdate[]>.CreateWithoutTopicFilter("book_snapshot", DoHandleMessage),
-                MessageRoute<PolymarketLastTradePriceUpdate>.CreateWithoutTopicFilter("last_trade_price", DoHandleMessage),
-                MessageRoute<PolymarketLastTradePriceUpdate>.CreateWithoutTopicFilter("tick_size_change", DoHandleMessage),
-                MessageRoute<PolymarketBestBidAskUpdate>.CreateWithoutTopicFilter("best_bid_ask", DoHandleMessage)
-                ]);
+            var routes = new List<MessageRoute>();
+
+            foreach(var item in tokenIds)
+            {
+                routes.Add(MessageRoute<PolymarketPriceChangeUpdate>.CreateWithTopicFilter("price_change", item, DoHandleMessage));
+                routes.Add(MessageRoute<PolymarketBookUpdate>.CreateWithTopicFilter("book", item, DoHandleMessage));
+                routes.Add(MessageRoute<PolymarketBookUpdate[]>.CreateWithTopicFilter("book_snapshot", item, DoHandleMessage));
+                routes.Add(MessageRoute<PolymarketLastTradePriceUpdate>.CreateWithTopicFilter("last_trade_price", item, DoHandleMessage));
+                routes.Add(MessageRoute<PolymarketTickSizeUpdate>.CreateWithTopicFilter("tick_size_change", item, DoHandleMessage));
+                routes.Add(MessageRoute<PolymarketBestBidAskUpdate>.CreateWithTopicFilter("best_bid_ask", item, DoHandleMessage));
+            }
+
+            MessageRouter = MessageRouter.Create(routes.ToArray());
         }
 
         /// <inheritdoc />
         protected override Query? GetSubQuery(SocketConnection connection)
         {
-            return new PolymarketQuery<object>("subscribe", _assetIds);
+            return new PolymarketQuery<object>("subscribe", _tokenIds);
         }
 
         /// <inheritdoc />
         protected override Query? GetUnsubQuery(SocketConnection connection)
         {
-            return new PolymarketQuery<object>("unsubscribe", _assetIds);
+            return new PolymarketQuery<object>("unsubscribe", _tokenIds);
         }
 
         /// <inheritdoc />
@@ -70,12 +77,17 @@ namespace Polymarket.Net.Objects.Sockets.Subscriptions
         {
             _client.UpdateTimeOffset(message.Timestamp);
 
-            _priceChangeHandler?.Invoke(new DataEvent<PolymarketPriceChangeUpdate>(PolymarketExchange.ExchangeName, message, receiveTime, originalData)
+            var updates = message.PriceChanges.Where(x => _tokenIds.Contains(x.AssetId)).ToArray();
+            if (updates.Length == 0)
+                return CallResult.SuccessResult;
+
+            var update = message with { PriceChanges = updates };
+            _priceChangeHandler?.Invoke(new DataEvent<PolymarketPriceChangeUpdate>(PolymarketExchange.ExchangeName, update, receiveTime, originalData)
                         .WithUpdateType(SocketUpdateType.Update)
                         .WithStreamId(message.EventType)
                         //.WithSymbol(data.Symbol)
                         .WithDataTimestamp(message.Timestamp, _client.GetTimeOffset()));
-            return new CallResult(null);
+            return CallResult.SuccessResult;
         }
 
         /// <inheritdoc />
@@ -88,7 +100,7 @@ namespace Polymarket.Net.Objects.Sockets.Subscriptions
                         .WithStreamId(message.EventType)
                         //.WithSymbol(data.Symbol)
                         .WithDataTimestamp(message.Timestamp, _client.GetTimeOffset()));
-            return new CallResult(null);
+            return CallResult.SuccessResult;
         }
 
         /// <inheritdoc />
@@ -101,7 +113,7 @@ namespace Polymarket.Net.Objects.Sockets.Subscriptions
                         .WithStreamId(message.EventType)
                         //.WithSymbol(data.Symbol)
                         .WithDataTimestamp(message.Timestamp, _client.GetTimeOffset()));
-            return new CallResult(null);
+            return CallResult.SuccessResult;
         }
 
         /// <inheritdoc />
@@ -109,6 +121,9 @@ namespace Polymarket.Net.Objects.Sockets.Subscriptions
         {
             foreach (var message in messages)
             {
+                if (!_tokenIds.Contains(message.AssetId))
+                    continue;
+
                 _bookHandler?.Invoke(new DataEvent<PolymarketBookUpdate>(PolymarketExchange.ExchangeName, message, receiveTime, originalData)
                             .WithUpdateType(SocketUpdateType.Snapshot)
                             .WithStreamId(message.EventType)
@@ -116,7 +131,7 @@ namespace Polymarket.Net.Objects.Sockets.Subscriptions
                             .WithDataTimestamp(message.Timestamp, _client.GetTimeOffset()));
             }
 
-            return new CallResult(null);
+            return CallResult.SuccessResult;
         }
 
         /// <inheritdoc />
@@ -129,7 +144,7 @@ namespace Polymarket.Net.Objects.Sockets.Subscriptions
                         .WithStreamId(message.EventType)
                         //.WithSymbol(data.Symbol)
                         .WithDataTimestamp(message.Timestamp, _client.GetTimeOffset()));
-            return new CallResult(null);
+            return CallResult.SuccessResult;
         }
 
         /// <inheritdoc />
@@ -142,7 +157,7 @@ namespace Polymarket.Net.Objects.Sockets.Subscriptions
                         .WithStreamId(message.EventType)
                         //.WithSymbol(data.Symbol)
                         .WithDataTimestamp(message.Timestamp, _client.GetTimeOffset()));
-            return new CallResult(null);
+            return CallResult.SuccessResult;
         }
     }
 }

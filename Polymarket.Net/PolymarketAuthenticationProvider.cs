@@ -4,8 +4,11 @@ using CryptoExchange.Net.Clients;
 using CryptoExchange.Net.Converters.SystemTextJson;
 using CryptoExchange.Net.Interfaces;
 using CryptoExchange.Net.Objects;
+using CryptoExchange.Net.Sockets;
+using CryptoExchange.Net.Sockets.Default;
 using Polymarket.Net.Objects;
 using Polymarket.Net.Objects.Options;
+using Polymarket.Net.Objects.Sockets;
 using Polymarket.Net.Signing;
 using Polymarket.Net.Utils;
 using Secp256k1Net;
@@ -61,6 +64,14 @@ namespace Polymarket.Net
                 // L2 authentication
                 SignL2(apiClient, requestConfig);
             }
+        }
+
+        public override Query? GetAuthenticationQuery(SocketApiClient apiClient, SocketConnection connection, Dictionary<string, object?>? context = null)
+        {
+            if (_credentials.L2ApiKey == null)
+                throw new InvalidOperationException("Layer 2 credentials required");
+
+            return new PolymarketInitialQuery<object>("USER", _credentials.L2ApiKey, _credentials.L2Secret!, _credentials.L2Pass!);
         }
 
         private void SignL1Custom(RestRequestConfiguration requestConfig)
@@ -184,59 +195,59 @@ namespace Polymarket.Net
                 return negativeRisk ? PolymarketContractsConfig.AmoyNegRiskConfig.Exchange : PolymarketContractsConfig.AmoyConfig.Exchange;            
         }
 
-        private Signing.TypedDataRaw GetTypeDataRawCustom(ParameterCollection order, int chainId, bool negativeRisk)
+        private TypedDataRaw GetTypeDataRawCustom(ParameterCollection order, int chainId, bool negativeRisk)
         {
-            return new Signing.TypedDataRaw
+            return new TypedDataRaw
             {
                 PrimaryType = "Order",
-                DomainRawValues = new Signing.MemberValue[]
+                DomainRawValues = new MemberValue[]
                 {
-                    new Signing.MemberValue { TypeName = "string", Value = "Polymarket CTF Exchange" },
-                    new Signing.MemberValue { TypeName = "string", Value = "1" },
-                    new Signing.MemberValue { TypeName = "uint256", Value = chainId },
-                    new Signing.MemberValue { TypeName = "address", Value = GetContract(order, chainId, negativeRisk) }
+                    new MemberValue { TypeName = "string", Value = "Polymarket CTF Exchange" },
+                    new MemberValue { TypeName = "string", Value = "1" },
+                    new MemberValue { TypeName = "uint256", Value = chainId },
+                    new MemberValue { TypeName = "address", Value = GetContract(order, chainId, negativeRisk) }
                 },
-                Message = new Signing.MemberValue[]
+                Message = new MemberValue[]
                 {
-                    new Signing.MemberValue { TypeName = "uint256", Value = order["salt"].ToString()! },
-                    new Signing.MemberValue { TypeName = "address", Value = order["maker"]},
-                    new Signing.MemberValue { TypeName = "address", Value = order["signer"]},
-                    new Signing.MemberValue { TypeName = "address", Value = order["taker"]},
-                    new Signing.MemberValue { TypeName = "uint256", Value = (string)order["tokenId"]},
-                    new Signing.MemberValue { TypeName = "uint256", Value = (string)order["makerAmount"]},
-                    new Signing.MemberValue { TypeName = "uint256", Value = (string)order["takerAmount"]},
-                    new Signing.MemberValue { TypeName = "uint256", Value = (string)order["expiration"]},
-                    new Signing.MemberValue { TypeName = "uint256", Value = (string)order["nonce"]},
-                    new Signing.MemberValue { TypeName = "uint256", Value = (string)order["feeRateBps"]},
-                    new Signing.MemberValue { TypeName = "uint8", Value = (byte)((string)order["side"] == "BUY" ? 0 : 1)},
-                    new Signing.MemberValue { TypeName = "uint8", Value = (byte)(int)order["signatureType"]}
+                    new MemberValue { TypeName = "uint256", Value = order["salt"].ToString()! },
+                    new MemberValue { TypeName = "address", Value = order["maker"]},
+                    new MemberValue { TypeName = "address", Value = order["signer"]},
+                    new MemberValue { TypeName = "address", Value = order["taker"]},
+                    new MemberValue { TypeName = "uint256", Value = (string)order["tokenId"]},
+                    new MemberValue { TypeName = "uint256", Value = (string)order["makerAmount"]},
+                    new MemberValue { TypeName = "uint256", Value = (string)order["takerAmount"]},
+                    new MemberValue { TypeName = "uint256", Value = (string)order["expiration"]},
+                    new MemberValue { TypeName = "uint256", Value = (string)order["nonce"]},
+                    new MemberValue { TypeName = "uint256", Value = (string)order["feeRateBps"]},
+                    new MemberValue { TypeName = "uint8", Value = (byte)((string)order["side"] == "BUY" ? 0 : 1)},
+                    new MemberValue { TypeName = "uint8", Value = (byte)(int)order["signatureType"]}
                 },
-                Types = new Dictionary<string, Signing.MemberDescription[]>
+                Types = new Dictionary<string, MemberDescription[]>
                 {
                     { "EIP712Domain",
-                        new Signing.MemberDescription[]
+                        new MemberDescription[]
                         {
-                            new Signing.MemberDescription { Name = "name", Type = "string" },
-                            new Signing.MemberDescription { Name = "version", Type = "string" },
-                            new Signing.MemberDescription { Name = "chainId", Type = "uint256" },
-                            new Signing.MemberDescription { Name = "verifyingContract", Type = "address" }
+                            new MemberDescription { Name = "name", Type = "string" },
+                            new MemberDescription { Name = "version", Type = "string" },
+                            new MemberDescription { Name = "chainId", Type = "uint256" },
+                            new MemberDescription { Name = "verifyingContract", Type = "address" }
                         }
                     },
                     { "Order",
-                        new Signing.MemberDescription[]
+                        new MemberDescription[]
                         {
-                            new Signing.MemberDescription { Name = "salt", Type = "uint256" },
-                            new Signing.MemberDescription { Name = "maker", Type = "address" },
-                            new Signing.MemberDescription { Name = "signer", Type = "address" },
-                            new Signing.MemberDescription { Name = "taker", Type = "address" },
-                            new Signing.MemberDescription { Name = "tokenId", Type = "uint256" },
-                            new Signing.MemberDescription { Name = "makerAmount", Type = "uint256" },
-                            new Signing.MemberDescription { Name = "takerAmount", Type = "uint256" },
-                            new Signing.MemberDescription { Name = "expiration", Type = "uint256" },
-                            new Signing.MemberDescription { Name = "nonce", Type = "uint256" },
-                            new Signing.MemberDescription { Name = "feeRateBps", Type = "uint256" },
-                            new Signing.MemberDescription { Name = "side", Type = "uint8" },
-                            new Signing.MemberDescription { Name = "signatureType", Type = "uint8" },
+                            new MemberDescription { Name = "salt", Type = "uint256" },
+                            new MemberDescription { Name = "maker", Type = "address" },
+                            new MemberDescription { Name = "signer", Type = "address" },
+                            new MemberDescription { Name = "taker", Type = "address" },
+                            new MemberDescription { Name = "tokenId", Type = "uint256" },
+                            new MemberDescription { Name = "makerAmount", Type = "uint256" },
+                            new MemberDescription { Name = "takerAmount", Type = "uint256" },
+                            new MemberDescription { Name = "expiration", Type = "uint256" },
+                            new MemberDescription { Name = "nonce", Type = "uint256" },
+                            new MemberDescription { Name = "feeRateBps", Type = "uint256" },
+                            new MemberDescription { Name = "side", Type = "uint8" },
+                            new MemberDescription { Name = "signatureType", Type = "uint8" },
                         }
                     }
                 }
@@ -245,177 +256,43 @@ namespace Polymarket.Net
 
         public TypedDataRaw GetEncodedClobAuth(string timestamp, long nonce)
         {
-            return new Signing.TypedDataRaw
+            return new TypedDataRaw
             {
                 PrimaryType = "ClobAuth",
-                DomainRawValues = new Signing.MemberValue[]
+                DomainRawValues = new MemberValue[]
                 {
-                    new Signing.MemberValue { TypeName = "string", Value = "ClobAuthDomain" },
-                    new Signing.MemberValue { TypeName = "string", Value = "1" },
-                    new Signing.MemberValue { TypeName = "uint256", Value = 137 },
+                    new MemberValue { TypeName = "string", Value = "ClobAuthDomain" },
+                    new MemberValue { TypeName = "string", Value = "1" },
+                    new MemberValue { TypeName = "uint256", Value = 137 },
                 },
-                Message = new Signing.MemberValue[]
+                Message = new MemberValue[]
                 {
-                    new Signing.MemberValue { TypeName = "address", Value = _credentials.Key },
-                    new Signing.MemberValue { TypeName = "string", Value = timestamp },
-                    new Signing.MemberValue { TypeName = "uint256", Value = nonce },
-                    new Signing.MemberValue { TypeName = "string", Value = _l1SignMessage }
+                    new MemberValue { TypeName = "address", Value = _credentials.Key },
+                    new MemberValue { TypeName = "string", Value = timestamp },
+                    new MemberValue { TypeName = "uint256", Value = nonce },
+                    new MemberValue { TypeName = "string", Value = _l1SignMessage }
                 },
-                Types = new Dictionary<string, Signing.MemberDescription[]>
+                Types = new Dictionary<string, MemberDescription[]>
                 {
                     { "EIP712Domain",
-                        new Signing.MemberDescription[]
+                        new MemberDescription[]
                         {
-                            new Signing.MemberDescription { Name = "name", Type = "string" },
-                            new Signing.MemberDescription { Name = "version", Type = "string" },
-                            new Signing.MemberDescription { Name = "chainId", Type = "uint256" }
+                            new MemberDescription { Name = "name", Type = "string" },
+                            new MemberDescription { Name = "version", Type = "string" },
+                            new MemberDescription { Name = "chainId", Type = "uint256" }
                         }
                     },
                     { "ClobAuth",
-                        new Signing.MemberDescription[]
+                        new MemberDescription[]
                         {
-                            new Signing.MemberDescription { Name = "address", Type = "address" },
-                            new Signing.MemberDescription { Name = "timestamp", Type = "string" },
-                            new Signing.MemberDescription { Name = "nonce", Type = "uint256" },
-                            new Signing.MemberDescription { Name = "message", Type = "string" }
+                            new MemberDescription { Name = "address", Type = "address" },
+                            new MemberDescription { Name = "timestamp", Type = "string" },
+                            new MemberDescription { Name = "nonce", Type = "uint256" },
+                            new MemberDescription { Name = "message", Type = "string" }
                         }
                     }
                 }
             };
         }
-
-        //private void SignL1Neth(RestRequestConfiguration requestConfig)
-        //{
-        //    var timestamp = DateTimeConverter.ConvertToSeconds(DateTime.UtcNow);
-        //    requestConfig.GetPositionParameters().TryGetValue("nonce", out var nonce);
-
-        //    var typedData = new UsdClassTransfer
-        //    {
-        //        Address = ApiKey,
-        //        Message = _l1SignMessage,
-        //        Nonce = nonce == null ? 0 : (long)nonce,
-        //        Timestamp = timestamp.Value.ToString()
-        //    };
-        //    var msg = EncodeEip721Neth(typedData, 137, "ClobAuth");
-        //    var keccakSigned = BytesToHexString(InternalSha3Keccack.CalculateHash(msg));
-
-        //    var messageBytes = ConvertHexStringToByteArray(keccakSigned);
-        //    var sign = new MessageSigner().SignAndCalculateV(messageBytes, new EthECKey(_credentials.Secret));
-        //    var signature = sign.CreateStringSignature();
-
-        //    requestConfig.Headers ??= new Dictionary<string, string>();
-        //    requestConfig.Headers.Add("POLY_ADDRESS", ApiKey);
-        //    requestConfig.Headers.Add("POLY_SIGNATURE", signature);
-        //    requestConfig.Headers.Add("POLY_TIMESTAMP", timestamp.Value.ToString());
-        //    requestConfig.Headers.Add("POLY_NONCE", nonce?.ToString() ?? "0");
-        //}
-
-        //public byte[] EncodeEip721Neth(
-        //    object msg,
-        //    int chainId,
-        //    string primaryType)
-        //{
-        //    var typeDef = new TypedData<DomainWithNameVersionAndChainId>
-        //    {
-        //        Domain = new DomainWithNameVersionAndChainId
-        //        {
-        //            Name = "ClobAuthDomain",
-        //            Version = "1",
-        //            ChainId = chainId
-        //        },
-        //        Types = MemberDescriptionFactory.GetTypesMemberDescription(typeof(DomainWithNameVersionAndChainId), messageType),
-        //        PrimaryType = primaryType,
-        //    };
-
-        //    var signer = new Eip712TypedDataSigner();
-        //    var encodedData = signer.EncodeTypedData((UsdClassTransfer)msg, typeDef);
-        //    return encodedData;
-        //}
-
-        //[Struct("ClobAuth")]
-        //public class UsdClassTransfer
-        //{
-        //    [Parameter("address", "address", 1)]
-        //    public string Address { get; set; }
-        //    [Parameter("string", "timestamp", 2)]
-        //    public string Timestamp { get; set; }
-        //    [Parameter("uint256", "nonce", 3)]
-        //    public long Nonce { get; set; }
-        //    [Parameter("string", "message", 4)]
-        //    public string Message { get; set; }
-        //}
-
-        //private Nethereum.ABI.EIP712.TypedDataRaw GetTypeDataRawNeth(ParameterCollection order)
-        //{
-        //    return new Nethereum.ABI.EIP712.TypedDataRaw
-        //    {
-        //        PrimaryType = "Order",
-        //        DomainRawValues = new Nethereum.ABI.EIP712.MemberValue[]
-        //        {
-        //            new Nethereum.ABI.EIP712.MemberValue { TypeName = "string", Value = "Polymarket CTF Exchange" },
-        //            new Nethereum.ABI.EIP712.MemberValue { TypeName = "string", Value = "1" },
-        //            //new MemberValue { TypeName = "uint256", Value = 137 },
-        //            new Nethereum.ABI.EIP712.MemberValue { TypeName = "uint256", Value = 80002 },
-        //            new Nethereum.ABI.EIP712.MemberValue { TypeName = "address", Value = PolymarketUtils.ExchangeContract }
-        //        },
-        //        Message = new Nethereum.ABI.EIP712.MemberValue[]
-        //        {
-        //            new Nethereum.ABI.EIP712.MemberValue { TypeName = "uint256", Value = order["salt"].ToString() },
-        //            new Nethereum.ABI.EIP712.MemberValue { TypeName = "address", Value = order["maker"]},
-        //            new Nethereum.ABI.EIP712.MemberValue { TypeName = "address", Value = order["signer"]},
-        //            new Nethereum.ABI.EIP712.MemberValue { TypeName = "address", Value = order["taker"]},
-        //            new Nethereum.ABI.EIP712.MemberValue { TypeName = "uint256", Value = (string)order["tokenId"]},
-        //            new Nethereum.ABI.EIP712.MemberValue { TypeName = "uint256", Value = (string)order["makerAmount"]},
-        //            new Nethereum.ABI.EIP712.MemberValue { TypeName = "uint256", Value = (string)order["takerAmount"]},
-        //            new Nethereum.ABI.EIP712.MemberValue { TypeName = "uint256", Value = (string)order["expiration"]},
-        //            new Nethereum.ABI.EIP712.MemberValue { TypeName = "uint256", Value = (string)order["nonce"]},
-        //            new Nethereum.ABI.EIP712.MemberValue { TypeName = "uint256", Value = (string)order["feeRateBps"]},
-        //            new Nethereum.ABI.EIP712.MemberValue { TypeName = "uint8", Value = (byte)(int)order["side"]},
-        //            new Nethereum.ABI.EIP712.MemberValue { TypeName = "uint8", Value = (byte)(int)order["signatureType"]}
-        //        },
-        //        Types = new Dictionary<string, Nethereum.ABI.EIP712.MemberDescription[]>
-        //        {
-        //            { "EIP712Domain",
-        //                new Nethereum.ABI.EIP712.MemberDescription[]
-        //                {
-        //                    new Nethereum.ABI.EIP712.MemberDescription { Name = "name", Type = "string" },
-        //                    new Nethereum.ABI.EIP712.MemberDescription { Name = "version", Type = "string" },
-        //                    new Nethereum.ABI.EIP712.MemberDescription { Name = "chainId", Type = "uint256" },
-        //                    new Nethereum.ABI.EIP712.MemberDescription { Name = "verifyingContract", Type = "address" }
-        //                }
-        //            },
-        //            { "Order",
-        //                new Nethereum.ABI.EIP712.MemberDescription[]
-        //                {
-        //                    new Nethereum.ABI.EIP712.MemberDescription { Name = "salt", Type = "uint256" },
-        //                    new Nethereum.ABI.EIP712.MemberDescription { Name = "maker", Type = "address" },
-        //                    new Nethereum.ABI.EIP712.MemberDescription { Name = "signer", Type = "address" },
-        //                    new Nethereum.ABI.EIP712.MemberDescription { Name = "taker", Type = "address" },
-        //                    new Nethereum.ABI.EIP712.MemberDescription { Name = "tokenId", Type = "uint256" },
-        //                    new Nethereum.ABI.EIP712.MemberDescription { Name = "makerAmount", Type = "uint256" },
-        //                    new Nethereum.ABI.EIP712.MemberDescription { Name = "takerAmount", Type = "uint256" },
-        //                    new Nethereum.ABI.EIP712.MemberDescription { Name = "expiration", Type = "uint256" },
-        //                    new Nethereum.ABI.EIP712.MemberDescription { Name = "nonce", Type = "uint256" },
-        //                    new Nethereum.ABI.EIP712.MemberDescription { Name = "feeRateBps", Type = "uint256" },
-        //                    new Nethereum.ABI.EIP712.MemberDescription { Name = "side", Type = "uint8" },
-        //                    new Nethereum.ABI.EIP712.MemberDescription { Name = "signatureType", Type = "uint8" },
-        //                }
-        //            }
-        //        }
-        //    };
-        //}
-
-
-        //public string GetOrderSignatureNethWorking(ParameterCollection parameters)
-        //{
-        //    var typeRaw = GetTypeDataRawNeth(parameters);
-        //    var signer = new Eip712TypedDataSigner();
-        //    var encodedTypedData = signer.EncodeTypedData(typeRaw.ToJson());
-        //    var hashedEncodedTypedData = Sha3Keccack.Current.CalculateHash(encodedTypedData);
-        //    var key = new EthECKey(_credentials.L1PrivateKey);
-        //    var signature = key.SignAndCalculateV(hashedEncodedTypedData);
-        //    return EthECDSASignature.CreateStringSignature(signature); // Correct signature
-        //}
-
     }
 }

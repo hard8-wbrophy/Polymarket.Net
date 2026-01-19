@@ -4,6 +4,7 @@ using CryptoExchange.Net.Objects.Options;
 using Polymarket.Net.Interfaces.Clients.ClobApi;
 using Polymarket.Net.Interfaces.Clients.GammaApi;
 using Polymarket.Net.Objects;
+using Polymarket.Net.Objects.Models;
 
 namespace Polymarket.Net.Interfaces.Clients
 {
@@ -28,6 +29,12 @@ namespace Polymarket.Net.Interfaces.Clients
         /// </summary>
         /// <param name="options">Options to update. Only specific options are changeable after the client has been created</param>
         void SetOptions(UpdateOptions options);
+
+        /// <summary>
+        /// Update existing credentials which specify L1 credentials (PolymarketAddress, L1PrivateKey) with L2 credentials
+        /// </summary>
+        /// <param name="credentials">Credentials</param>
+        void UpdateL2Credentials(PolymarketCreds credentials);
 
         /// <summary>
         /// Set the API credentials for this client. All Api clients in this client will use the new credentials, regardless of earlier set options.

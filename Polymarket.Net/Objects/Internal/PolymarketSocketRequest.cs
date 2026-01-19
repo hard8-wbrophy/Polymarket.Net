@@ -10,9 +10,9 @@ namespace Polymarket.Net.Objects.Internal
     internal class PolymarketSocketRequest
     {
         [JsonPropertyName("assets_ids")]
-        public string[] Assets { get; set; }
-        [JsonPropertyName("type")]
-        public string Type { get; set; }
+        public string[] Assets { get; set; } = [];
+        [JsonPropertyName("operation")]
+        public string Type { get; set; } = string.Empty;
         [JsonPropertyName("custom_feature_enabled")]
         public bool CustomFeatureEnabled { get; set; }
     }

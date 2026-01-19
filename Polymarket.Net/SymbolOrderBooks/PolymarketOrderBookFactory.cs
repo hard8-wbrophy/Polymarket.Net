@@ -30,7 +30,6 @@ namespace Polymarket.Net.SymbolOrderBooks
         public ISymbolOrderBook CreateClob(string tokenId, Action<PolymarketOrderBookOptions>? options = null)
             => new PolymarketClobSymbolOrderBook(tokenId, options, 
                                                           _serviceProvider.GetRequiredService<ILoggerFactory>(),
-                                                          _serviceProvider.GetRequiredService<IPolymarketRestClient>(),
                                                           _serviceProvider.GetRequiredService<IPolymarketSocketClient>());
 
 

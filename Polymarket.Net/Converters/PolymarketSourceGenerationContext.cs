@@ -64,6 +64,10 @@ namespace Polymarket.Net.Converters
     [JsonSerializable(typeof(PolymarketBalanceAllowance))]
 
     [JsonSerializable(typeof(PolymarketSocketRequest))]
+    [JsonSerializable(typeof(PolymarketSocketInitialRequest))]
+    [JsonSerializable(typeof(PolymarketSportsUpdate))]
+    [JsonSerializable(typeof(PolymarketTradeUpdate))]
+    [JsonSerializable(typeof(PolymarketOrderUpdate))]
 
     [JsonSerializable(typeof(string))]
     [JsonSerializable(typeof(int?))]

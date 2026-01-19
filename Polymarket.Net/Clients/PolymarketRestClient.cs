@@ -12,6 +12,7 @@ using Polymarket.Net.Clients.ClobApi;
 using Polymarket.Net.Objects;
 using Polymarket.Net.Interfaces.Clients.GammaApi;
 using Polymarket.Net.Clients.GammaApi;
+using Polymarket.Net.Objects.Models;
 
 namespace Polymarket.Net.Clients
 {
@@ -69,6 +70,24 @@ namespace Polymarket.Net.Clients
         public static void SetDefaultOptions(Action<PolymarketRestOptions> optionsDelegate)
         {
             PolymarketRestOptions.Default = ApplyOptionsDelegate(optionsDelegate);
+        }
+
+        /// <inheritdoc />
+        public void UpdateL2Credentials(PolymarketCreds credentials)
+        {
+            var existingCreds = (PolymarketCredentials?)((PolymarketRestClientClobApi)ClobApi).ApiCredentials;
+            if (existingCreds == null)
+                throw new InvalidOperationException("UpdateL2Credentials can not be called without having initial L1 credentials. Use `SetApiCredentials` to set full credentials");            
+
+            var newCredentials = new PolymarketCredentials(
+                existingCreds.PolymarketAddress,
+                existingCreds.L1PrivateKey,
+                credentials.ApiKey,
+                credentials.Secret,
+                credentials.Passphrase
+                );
+
+            SetApiCredentials(newCredentials);
         }
 
         /// <inheritdoc />

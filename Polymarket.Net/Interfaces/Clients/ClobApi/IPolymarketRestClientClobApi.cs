@@ -9,6 +9,9 @@ namespace Polymarket.Net.Interfaces.Clients.ClobApi
     /// </summary>
     public interface IPolymarketRestClientClobApi : IRestApiClient, IDisposable
     {
+        /// <summary>
+        /// Client options
+        /// </summary>
         public PolymarketRestOptions ClientOptions { get; }
 
         /// <summary>

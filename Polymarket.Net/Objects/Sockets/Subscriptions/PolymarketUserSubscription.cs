@@ -10,48 +10,45 @@ using System;
 namespace Polymarket.Net.Objects.Sockets.Subscriptions
 {
     /// <inheritdoc />
-    internal class PolymarketGeneralSubscription : Subscription
+    internal class PolymarketUserSubscription : Subscription
     {
-        private readonly Action<DataEvent<PolymarketNewMarketUpdate>>? _newMarketUpdate;
-        private readonly Action<DataEvent<PolymarketMarketResolvedUpdate>>? _marketResolvedUpdate;
+        private readonly Action<DataEvent<PolymarketOrderUpdate>>? _orderUpdate;
+        private readonly Action<DataEvent<PolymarketTradeUpdate>>? _tradeUpdate;
 
         private PolymarketSocketClientClobApi _client;
 
         /// <summary>
         /// ctor
         /// </summary>
-        public PolymarketGeneralSubscription(
+        public PolymarketUserSubscription(
             ILogger logger,
             PolymarketSocketClientClobApi client,
-            Action<DataEvent<PolymarketNewMarketUpdate>>? newMarketUpdate,
-            Action<DataEvent<PolymarketMarketResolvedUpdate>>? marketResolvedUpdate
-            ) : base(logger, false)
+            Action<DataEvent<PolymarketOrderUpdate>>? orderUpdate,
+            Action<DataEvent<PolymarketTradeUpdate>>? tradeUpdate
+            ) : base(logger, true)
         {
             _client = client;
-            _newMarketUpdate = newMarketUpdate;
-            _marketResolvedUpdate = marketResolvedUpdate;
+            _orderUpdate = orderUpdate;
+            _tradeUpdate = tradeUpdate;
 
             MessageRouter = MessageRouter.Create([
-                MessageRoute<PolymarketNewMarketUpdate>.CreateWithoutTopicFilter("new_market", DoHandleMessage),
-                MessageRoute<PolymarketNewMarketUpdate>.CreateWithoutTopicFilter("market_resolved", DoHandleMessage)
+                MessageRoute<PolymarketTradeUpdate>.CreateWithoutTopicFilter("trade", DoHandleMessage),
+                MessageRoute<PolymarketOrderUpdate>.CreateWithoutTopicFilter("order", DoHandleMessage)
                 ]);
         }
 
         /// <inheritdoc />
-        protected override Query? GetSubQuery(SocketConnection connection)
-        {
-            return new PolymarketInitialQuery<object>("MARKET");
-        }
+        protected override Query? GetSubQuery(SocketConnection connection) => null;
 
         /// <inheritdoc />
         protected override Query? GetUnsubQuery(SocketConnection connection) => null;
 
         /// <inheritdoc />
-        public CallResult DoHandleMessage(SocketConnection connection, DateTime receiveTime, string? originalData, PolymarketNewMarketUpdate message)
+        public CallResult DoHandleMessage(SocketConnection connection, DateTime receiveTime, string? originalData, PolymarketTradeUpdate message)
         {
             _client.UpdateTimeOffset(message.Timestamp);
 
-            _newMarketUpdate?.Invoke(new DataEvent<PolymarketNewMarketUpdate>(PolymarketExchange.ExchangeName, message, receiveTime, originalData)
+            _tradeUpdate?.Invoke(new DataEvent<PolymarketTradeUpdate>(PolymarketExchange.ExchangeName, message, receiveTime, originalData)
                         .WithUpdateType(SocketUpdateType.Update)
                         .WithStreamId(message.EventType)
                         //.WithSymbol(data.Symbol)
@@ -60,11 +57,11 @@ namespace Polymarket.Net.Objects.Sockets.Subscriptions
         }
 
         /// <inheritdoc />
-        public CallResult DoHandleMessage(SocketConnection connection, DateTime receiveTime, string? originalData, PolymarketMarketResolvedUpdate message)
+        public CallResult DoHandleMessage(SocketConnection connection, DateTime receiveTime, string? originalData, PolymarketOrderUpdate message)
         {
             _client.UpdateTimeOffset(message.Timestamp);
 
-            _marketResolvedUpdate?.Invoke(new DataEvent<PolymarketMarketResolvedUpdate>(PolymarketExchange.ExchangeName, message, receiveTime, originalData)
+            _orderUpdate?.Invoke(new DataEvent<PolymarketOrderUpdate>(PolymarketExchange.ExchangeName, message, receiveTime, originalData)
                         .WithUpdateType(SocketUpdateType.Update)
                         .WithStreamId(message.EventType)
                         //.WithSymbol(data.Symbol)

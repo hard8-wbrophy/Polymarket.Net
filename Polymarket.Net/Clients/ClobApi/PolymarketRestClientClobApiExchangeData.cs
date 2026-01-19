@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CryptoExchange.Net.Converters.SystemTextJson;
 using CryptoExchange.Net.Objects;
+using CryptoExchange.Net.RateLimiting.Guards;
 using Microsoft.Extensions.Logging;
 using Polymarket.Net.Enums;
 using Polymarket.Net.Interfaces.Clients.ClobApi;
@@ -30,7 +31,7 @@ namespace Polymarket.Net.Clients.ClobApi
         /// <inheritdoc />
         public async Task<WebCallResult<DateTime>> GetServerTimeAsync(CancellationToken ct = default)
         {
-            var request = _definitions.GetOrCreate(HttpMethod.Get, "time", PolymarketExchange.RateLimiter.Polymarket, 1, false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "time", PolymarketExchange.RateLimiter.ClobApi, 1, false);
             var result = await _baseClient.SendAsync<long>(request, null, ct).ConfigureAwait(false);
             return result.As(result.Success ? DateTimeConverter.ConvertFromSeconds(result.Data) : default);
         }
@@ -120,7 +121,8 @@ namespace Polymarket.Net.Clients.ClobApi
             var parameters = new ParameterCollection();
             parameters.Add("token_id", tokenId);
             parameters.AddEnum("side", side);
-            var request = _definitions.GetOrCreate(HttpMethod.Get, "price", PolymarketExchange.RateLimiter.Polymarket, 1, false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "price", PolymarketExchange.RateLimiter.ClobApi, 1, false,
+                limitGuard: new SingleLimitGuard(1500, TimeSpan.FromSeconds(10), RateLimitWindowType.Sliding));
             return await _baseClient.SendAsync<PolymarketPrice>(request, parameters, ct).ConfigureAwait(false);
         }
 
@@ -139,7 +141,8 @@ namespace Polymarket.Net.Clients.ClobApi
                     Side = x.Value
                 }
             ).ToArray());
-            var request = _definitions.GetOrCreate(HttpMethod.Post, "prices", PolymarketExchange.RateLimiter.Polymarket, 1, false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "prices", PolymarketExchange.RateLimiter.ClobApi, 1, false,
+                limitGuard: new SingleLimitGuard(500, TimeSpan.FromSeconds(10), RateLimitWindowType.Sliding));
             return await _baseClient.SendAsync<Dictionary<string, PolymarketBuySellPrice>>(request, parameters, ct).ConfigureAwait(false);
         }
 
@@ -152,7 +155,8 @@ namespace Polymarket.Net.Clients.ClobApi
         {
             var parameters = new ParameterCollection();
             parameters.Add("token_id", tokenId);
-            var request = _definitions.GetOrCreate(HttpMethod.Get, "midpoint", PolymarketExchange.RateLimiter.Polymarket, 1, false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "midpoint", PolymarketExchange.RateLimiter.ClobApi, 1, false,
+                limitGuard: new SingleLimitGuard(1500, TimeSpan.FromSeconds(10), RateLimitWindowType.Sliding));
             var result = await _baseClient.SendAsync<PolymarketMidPrice>(request, parameters, ct).ConfigureAwait(false);
             return result;
         }
@@ -171,7 +175,8 @@ namespace Polymarket.Net.Clients.ClobApi
                     TokenId = x
                 }
             ).ToArray());
-            var request = _definitions.GetOrCreate(HttpMethod.Post, "midpoints", PolymarketExchange.RateLimiter.Polymarket, 1, false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "midpoints", PolymarketExchange.RateLimiter.ClobApi, 1, false,
+                limitGuard: new SingleLimitGuard(500, TimeSpan.FromSeconds(10), RateLimitWindowType.Sliding));
             var result = await _baseClient.SendAsync<Dictionary<string, decimal>>(request, parameters, ct).ConfigureAwait(false);
             return result;
         }
@@ -189,7 +194,8 @@ namespace Polymarket.Net.Clients.ClobApi
             parameters.AddOptionalMilliseconds("endTs", endTime);
             parameters.AddOptionalEnum("interval", interval);
             parameters.AddOptional("fidelity", fidelity);
-            var request = _definitions.GetOrCreate(HttpMethod.Get, "/prices-history", PolymarketExchange.RateLimiter.Polymarket, 1, false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "/prices-history", PolymarketExchange.RateLimiter.ClobApi, 1, false,
+                limitGuard: new SingleLimitGuard(1000, TimeSpan.FromSeconds(10), RateLimitWindowType.Sliding));
             var result = await _baseClient.SendAsync<PolymarketPriceHistoryWrapper>(request, parameters, ct).ConfigureAwait(false);
             return result.As<PolymarketPriceHistory[]>(result.Data?.History);
         }
@@ -236,7 +242,8 @@ namespace Polymarket.Net.Clients.ClobApi
         {
             var parameters = new ParameterCollection();
             parameters.Add("token_id", tokenId);
-            var request = _definitions.GetOrCreate(HttpMethod.Get, "book", PolymarketExchange.RateLimiter.Polymarket, 1, false);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "book", PolymarketExchange.RateLimiter.ClobApi, 1, false,
+                limitGuard: new SingleLimitGuard(1500, TimeSpan.FromSeconds(10), RateLimitWindowType.Sliding));
             var result = await _baseClient.SendAsync<PolymarketOrderBook>(request, parameters, ct).ConfigureAwait(false);
             return result;
         }
@@ -255,7 +262,8 @@ namespace Polymarket.Net.Clients.ClobApi
                     TokenId = x
                 }
             ).ToArray());
-            var request = _definitions.GetOrCreate(HttpMethod.Post, "books", PolymarketExchange.RateLimiter.Polymarket, 1, false);
+            var request = _definitions.GetOrCreate(HttpMethod.Post, "books", PolymarketExchange.RateLimiter.ClobApi, 1, false,
+                limitGuard: new SingleLimitGuard(500, TimeSpan.FromSeconds(10), RateLimitWindowType.Sliding));
             var result = await _baseClient.SendAsync<PolymarketOrderBook[]>(request, parameters, ct).ConfigureAwait(false);
             return result;
         }

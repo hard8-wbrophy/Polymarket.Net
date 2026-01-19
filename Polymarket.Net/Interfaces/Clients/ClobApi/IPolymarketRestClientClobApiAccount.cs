@@ -13,18 +13,47 @@ namespace Polymarket.Net.Interfaces.Clients.ClobApi
     /// </summary>
     public interface IPolymarketRestClientClobApiAccount
     {
+        /// <summary>
+        /// Create API credentials for the provided API credentials private key
+        /// <para><a href="https://docs.polymarket.com/developers/CLOB/authentication#l2-authentication" /></para>
+        /// </summary>
+        /// <param name="nonce">Nonce, different nonces can be used to create different credentials</param>
+        /// <param name="ct">Cancellation token</param>
         Task<WebCallResult<PolymarketCreds>> CreateApiCredentialsAsync(long? nonce = null, CancellationToken ct = default);
 
+        /// <summary>
+        /// Get previously created API credentials for the provided API credentials private key
+        /// <para><a href="https://docs.polymarket.com/developers/CLOB/authentication#l2-authentication" /></para>
+        /// </summary>
+        /// <param name="nonce">Nonce</param>
+        /// <param name="ct">Cancellation token</param>
         Task<WebCallResult<PolymarketCreds>> GetApiCredentialsAsync(long? nonce = null, CancellationToken ct = default);
 
-        Task<WebCallResult<PolymarketCreds>> GetOrCreateApiCredentialsAsync(long? nonce = null);
+        /// <summary>
+        /// Get previously created API credentials, or create new credentials if no credentials are created yet
+        /// <para><a href="https://docs.polymarket.com/developers/CLOB/authentication#l2-authentication" /></para>
+        /// </summary>
+        /// <param name="nonce">Nonce</param>
+        /// <param name="ct">Cancellation token</param>
+        Task<WebCallResult<PolymarketCreds>> GetOrCreateApiCredentialsAsync(long? nonce = null, CancellationToken ct = default);
 
+        /// <summary>
+        /// List API keys for the provided API credentials private key
+        /// </summary>
+        /// <param name="ct">Cancellation token</param>
         Task<WebCallResult<PolymarketApiKeys>> GetApiKeysAsync(CancellationToken ct = default);
 
+        /// <summary>
+        /// Delete an API key
+        /// </summary>
+        /// <param name="ct">Cancellation token</param>
         Task<WebCallResult> DeleteApiKeyAsync(CancellationToken ct = default);
 
+        /// <summary>
+        /// Get closed only mode
+        /// </summary>
+        /// <param name="ct">Cancellation token</param>
         Task<WebCallResult<PolymarketClosedOnlyMode>> GetClosedOnlyModeAsync(CancellationToken ct = default);
-
 
         /// <summary>
         /// Get notifications

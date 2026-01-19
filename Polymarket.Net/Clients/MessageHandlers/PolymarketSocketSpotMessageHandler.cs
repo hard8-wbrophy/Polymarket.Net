@@ -11,6 +11,10 @@ namespace Polymarket.Net.Clients.MessageHandlers
 
         public PolymarketSocketSpotMessageHandler()
         {
+            AddTopicMapping<PolymarketBookUpdate>(x => x.AssetId);
+            AddTopicMapping<PolymarketLastTradePriceUpdate>(x => x.AssetId);
+            AddTopicMapping<PolymarketTickSizeUpdate>(x => x.AssetId);
+            AddTopicMapping<PolymarketBestBidAskUpdate>(x => x.AssetId);
         }
 
         protected override MessageTypeDefinition[] TypeEvaluators { get; } = [
@@ -28,6 +32,13 @@ namespace Polymarket.Net.Clients.MessageHandlers
                 ],
                 TypeIdentifierCallback = x => x.FieldValue("event_type")! + "_snapshot",
             },
+
+            new MessageTypeDefinition {
+                Fields = [
+                    new PropertyFieldReference("gameId"),
+                ],
+                StaticIdentifier = "sports"
+            }
         ];
     }
 }

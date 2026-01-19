@@ -7,6 +7,8 @@ using Polymarket.Net.Converters;
 using System.Text.Json;
 using CryptoExchange.Net.Converters.SystemTextJson;
 using CryptoExchange.Net.Converters;
+using CryptoExchange.Net.RateLimiting.Guards;
+using CryptoExchange.Net.RateLimiting.Filters;
 
 namespace Polymarket.Net
 {
@@ -78,13 +80,15 @@ namespace Polymarket.Net
 
         private void Initialize()
         {
-            Polymarket = new RateLimitGate("Polymarket");
-            Polymarket.RateLimitTriggered += (x) => RateLimitTriggered?.Invoke(x);
-            Polymarket.RateLimitUpdated += (x) => RateLimitUpdated?.Invoke(x);
+            ClobApi = new RateLimitGate("Clob")
+                .AddGuard(new RateLimitGuard(RateLimitGuard.PerHost, new LimitItemTypeFilter(RateLimitItemType.Request), 9000, TimeSpan.FromSeconds(10), RateLimitWindowType.Sliding)); // 9000 requests per 10 seconds
+
+            ClobApi.RateLimitTriggered += (x) => RateLimitTriggered?.Invoke(x);
+            Polymarket.ClobApi += (x) => RateLimitUpdated?.Invoke(x);
         }
 
 
-        internal IRateLimitGate Polymarket { get; private set; }
+        internal IRateLimitGate ClobApi { get; private set; }
 
     }
 }

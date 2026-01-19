@@ -18,12 +18,7 @@ namespace Polymarket.Net.Objects.Sockets
         {
             ExpectsResponse = false;
 
-            MessageRouter = MessageRouter.CreateWithoutTopicFilter<T>("", HandleMessage);
-        }
-
-        public CallResult<T> HandleMessage(SocketConnection connection, DateTime receiveTime, string? originalData, T message)
-        {
-            return new CallResult<T>(message, originalData, null);
+            MessageRouter = MessageRouter.CreateWithoutHandler<T>("");
         }
     }
 }

@@ -28,7 +28,7 @@ namespace Polymarket.Net.SymbolOrderBooks
         /// <param name="symbol">The symbol the order book is for</param>
         /// <param name="optionsDelegate">Option configuration delegate</param>
         public PolymarketClobSymbolOrderBook(string symbol, Action<PolymarketOrderBookOptions>? optionsDelegate = null)
-            : this(symbol, optionsDelegate, null, null, null)
+            : this(symbol, optionsDelegate, null, null)
         {
             _clientOwner = true;
         }
@@ -44,7 +44,6 @@ namespace Polymarket.Net.SymbolOrderBooks
             string tokenId,
             Action<PolymarketOrderBookOptions>? optionsDelegate,
             ILoggerFactory? logger,
-            IPolymarketRestClient? restClient,
             IPolymarketSocketClient? socketClient) : base(logger, "Polymarket", "Clob", tokenId)
         {
             var options = PolymarketOrderBookOptions.Default.Copy();
@@ -53,9 +52,7 @@ namespace Polymarket.Net.SymbolOrderBooks
             Initialize(options);
 
             _strictLevels = false;
-            _sequencesAreConsecutive = options?.Limit == null;
 
-            Levels = options?.Limit;
             _initialDataTimeout = options?.InitialDataTimeout ?? TimeSpan.FromSeconds(30);
             _clientOwner = socketClient == null;
             _socketClient = socketClient ?? new PolymarketSocketClient();

@@ -22,16 +22,23 @@ namespace Polymarket.Net
         /// </summary>
         public string ClobSocketClientAddress { get; }
 
+        /// <summary>
+        /// Socket Sport API address
+        /// </summary>
+        public string SportSocketClientAddress { get; }
+
         internal PolymarketEnvironment(
             string name,
             string clobRestAddress,
             string gammaRestAddress,
-            string clobStreamAddress) :
+            string clobStreamAddress,
+            string sportStreamAddress) :
             base(name)
         {
             ClobRestClientAddress = clobRestAddress;
             GammaRestClientAddress = gammaRestAddress;
             ClobSocketClientAddress = clobStreamAddress;
+            SportSocketClientAddress = sportStreamAddress;
         }
 
         /// <summary>
@@ -67,7 +74,8 @@ namespace Polymarket.Net
             = new PolymarketEnvironment(TradeEnvironmentNames.Live,
                                      PolymarketApiAddresses.Default.ClobRestClientAddress,
                                      PolymarketApiAddresses.Default.GammaRestClientAddress,
-                                     PolymarketApiAddresses.Default.ClobSocketClientAddress);
+                                     PolymarketApiAddresses.Default.ClobSocketClientAddress,
+                                     PolymarketApiAddresses.Default.SportsSocketClientAddress);
 
         /// <summary>
         /// Create a custom environment
@@ -77,7 +85,8 @@ namespace Polymarket.Net
                         string name,
                         string clobRestAddress,
                         string gammaRestAddress,
-                        string spotSocketStreamsAddress)
-            => new PolymarketEnvironment(name, clobRestAddress, gammaRestAddress, spotSocketStreamsAddress);
+                        string clobSocketStreamsAddress,
+                        string sportSocketStreamsAddress)
+            => new PolymarketEnvironment(name, clobRestAddress, gammaRestAddress, clobSocketStreamsAddress, sportSocketStreamsAddress);
     }
 }

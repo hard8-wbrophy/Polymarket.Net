@@ -1,4 +1,5 @@
 using CryptoExchange.Net.Objects;
+using CryptoExchange.Net.RateLimiting.Guards;
 using Polymarket.Net.Enums;
 using Polymarket.Net.Interfaces.Clients.ClobApi;
 using Polymarket.Net.Objects.Models;
@@ -39,13 +40,13 @@ namespace Polymarket.Net.Clients.ClobApi
             return result;
         }
 
-        public async Task<WebCallResult<PolymarketCreds>> GetOrCreateApiCredentialsAsync(long? nonce = null)
+        public async Task<WebCallResult<PolymarketCreds>> GetOrCreateApiCredentialsAsync(long? nonce = null, CancellationToken ct = default)
         {
-            var getResult = await GetApiCredentialsAsync(nonce).ConfigureAwait(false);
+            var getResult = await GetApiCredentialsAsync(nonce, ct).ConfigureAwait(false);
             if (getResult)
                 return getResult;
 
-            return await CreateApiCredentialsAsync(nonce).ConfigureAwait(false);
+            return await CreateApiCredentialsAsync(nonce, ct).ConfigureAwait(false);
         }
 
         public async Task<WebCallResult<PolymarketApiKeys>> GetApiKeysAsync(CancellationToken ct = default)
@@ -78,7 +79,8 @@ namespace Polymarket.Net.Clients.ClobApi
         {
             var parameters = new ParameterCollection();
             parameters.Add("signature_type", 0);
-            var request = _definitions.GetOrCreate(HttpMethod.Get, "notifications", PolymarketExchange.RateLimiter.Polymarket, 1, true);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "notifications", PolymarketExchange.RateLimiter.ClobApi, 1, true,
+                limitGuard: new SingleLimitGuard(900, TimeSpan.FromSeconds(10), RateLimitWindowType.Sliding));
             var result = await _baseClient.SendAsync<PolymarketNotification[]>(request, parameters, ct).ConfigureAwait(false);
             return result;
         }
@@ -88,7 +90,8 @@ namespace Polymarket.Net.Clients.ClobApi
             var parameters = new ParameterCollection();
             parameters.Add("signature_type", 0);
             parameters.Add("ids", string.Join(",", ids));
-            var request = _definitions.GetOrCreate(HttpMethod.Delete, "notifications", PolymarketExchange.RateLimiter.Polymarket, 1, true, parameterPosition: HttpMethodParameterPosition.InUri);
+            var request = _definitions.GetOrCreate(HttpMethod.Delete, "notifications", PolymarketExchange.RateLimiter.ClobApi, 1, true, parameterPosition: HttpMethodParameterPosition.InUri,
+                limitGuard: new SingleLimitGuard(125, TimeSpan.FromSeconds(10), RateLimitWindowType.Sliding));
             var result = await _baseClient.SendAsync<PolymarketNotification[]>(request, parameters, ct).ConfigureAwait(false);
             return result;
         }
@@ -99,7 +102,8 @@ namespace Polymarket.Net.Clients.ClobApi
             parameters.Add("signature_type", 0);
             parameters.AddEnum("asset_type", assetType);
             parameters.AddOptional("token_id", tokenId);
-            var request = _definitions.GetOrCreate(HttpMethod.Get, "balance-allowance", PolymarketExchange.RateLimiter.Polymarket, 1, true);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "balance-allowance", PolymarketExchange.RateLimiter.ClobApi, 1, true,
+                limitGuard: new SingleLimitGuard(200, TimeSpan.FromSeconds(10), RateLimitWindowType.Sliding));
             var result = await _baseClient.SendAsync<PolymarketBalanceAllowance>(request, parameters, ct).ConfigureAwait(false);
             return result;
         }
@@ -110,7 +114,8 @@ namespace Polymarket.Net.Clients.ClobApi
             parameters.Add("signature_type", 0);
             parameters.AddEnum("asset_type", assetType);
             parameters.AddOptional("token_id", tokenId);
-            var request = _definitions.GetOrCreate(HttpMethod.Get, "balance-allowance/update", PolymarketExchange.RateLimiter.Polymarket, 1, true);
+            var request = _definitions.GetOrCreate(HttpMethod.Get, "balance-allowance/update", PolymarketExchange.RateLimiter.ClobApi, 1, true,
+                limitGuard: new SingleLimitGuard(50, TimeSpan.FromSeconds(10), RateLimitWindowType.Sliding));
             var result = await _baseClient.SendAsync(request, parameters, ct).ConfigureAwait(false);
             return result;
         }

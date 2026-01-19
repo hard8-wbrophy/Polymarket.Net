@@ -34,7 +34,7 @@ namespace Polymarket.Net.Clients.ClobApi
     internal partial class PolymarketSocketClientClobApi : SocketApiClient, IPolymarketSocketClientClobApi
     {
         #region fields
-        private static readonly MessagePath _idPath = MessagePath.Get().Property("id");
+        private string _sportUri;
 
         protected override ErrorMapping ErrorMapping => PolymarketErrors.Errors;
         #endregion
@@ -47,6 +47,9 @@ namespace Polymarket.Net.Clients.ClobApi
         internal PolymarketSocketClientClobApi(ILogger logger, PolymarketSocketOptions options) :
             base(logger, options.Environment.ClobSocketClientAddress!, options, options.ClobOptions)
         {
+            AddSystemSubscription(new PolymarketGeneralSystemSubscription(_logger));
+
+            _sportUri = options.Environment.SportSocketClientAddress;
         }
         #endregion
 
@@ -98,10 +101,33 @@ namespace Polymarket.Net.Clients.ClobApi
         }
 
         /// <inheritdoc />
-        public override string? GetListenerIdentifier(IMessageAccessor message)
+        public async Task<CallResult<UpdateSubscription>> SubscribeToUserUpdatesAsync(
+            Action<DataEvent<PolymarketOrderUpdate>>? onOrderUpdate = null,
+            Action<DataEvent<PolymarketTradeUpdate>>? onTradeUpdate = null,
+            CancellationToken ct = default)
         {
-            return message.GetValue<string>(_idPath);
+            var subscription = new PolymarketUserSubscription(
+                _logger,
+                this,
+                onOrderUpdate,
+                onTradeUpdate);
+            return await SubscribeAsync(BaseAddress.AppendPath("ws/user"), subscription, ct).ConfigureAwait(false);
         }
+
+        /// <inheritdoc />
+        public async Task<CallResult<UpdateSubscription>> SubscribeToSportsUpdatesAsync(
+            Action<DataEvent<PolymarketSportsUpdate>>? onSportsUpdate = null,
+            CancellationToken ct = default)
+        {
+            var subscription = new PolymarketSportSubscription(
+                _logger,
+                onSportsUpdate);
+            return await SubscribeAsync(_sportUri.AppendPath("ws"), subscription, ct).ConfigureAwait(false);
+        }
+
+        /// <inheritdoc />
+        public override string? GetListenerIdentifier(IMessageAccessor message)
+            => throw new NotImplementedException();
 
         /// <inheritdoc />
         public override string FormatSymbol(string baseAsset, string quoteAsset, TradingMode tradingMode, DateTime? deliverDate = null)
