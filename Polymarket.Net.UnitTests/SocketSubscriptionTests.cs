@@ -19,24 +19,23 @@ namespace Polymarket.Net.UnitTests
         {
             var client = new PolymarketSocketClient(opts =>
             {
-                opts.ApiCredentials = new PolymarketCredentials("123", "456", "1", "MTIz", "3");
+                opts.ApiCredentials = new PolymarketCredentials(Enums.SignType.EOA, "456", "1", "MTIz", "3", "123");
             });
             var tester = new SocketSubscriptionValidator<PolymarketSocketClient>(client, "Subscriptions/Clob", "wss://ws-subscriptions-clob.polymarket.com");
             await tester.ValidateAsync<PolymarketOrderUpdate>((client, handler) => client.ClobApi.SubscribeToUserUpdatesAsync(handler, null), "OrderUpdate", ignoreProperties: ["type"]);
             await tester.ValidateAsync<PolymarketTradeUpdate>((client, handler) => client.ClobApi.SubscribeToUserUpdatesAsync(null, handler), "TradeUpdate", ignoreProperties: ["type"]);
         }
 
-        [TestCase(true)]
-        public async Task ValidateConcurrentSpotSubscriptions(bool newDeserialization)
+        [Test]
+        public async Task ValidateConcurrentSpotSubscriptions()
         {
             var logger = new LoggerFactory();
             logger.AddProvider(new TraceLoggerProvider());
 
             var client = new PolymarketSocketClient(Options.Create(new PolymarketSocketOptions
             {
-                ApiCredentials = new PolymarketCredentials("123", "456"),
-                OutputOriginalData = true,
-                UseUpdatedDeserialization = newDeserialization
+                ApiCredentials = new PolymarketCredentials(Enums.SignType.EOA, "456"),
+                OutputOriginalData = true
             }), logger);
 
             var tester = new SocketSubscriptionValidator<PolymarketSocketClient>(client, "Subscriptions/Clob", "wss://ws-subscriptions-clob.polymarket.com", "data");

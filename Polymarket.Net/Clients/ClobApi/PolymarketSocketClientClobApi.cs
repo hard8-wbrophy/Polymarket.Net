@@ -54,8 +54,6 @@ namespace Polymarket.Net.Clients.ClobApi
         #endregion
 
         /// <inheritdoc />
-        protected override IByteMessageAccessor CreateAccessor(WebSocketMessageType type) => new SystemTextJsonByteMessageAccessor(PolymarketPlatform._serializerContext);
-        /// <inheritdoc />
         protected override IMessageSerializer CreateSerializer() => new SystemTextJsonMessageSerializer(PolymarketPlatform._serializerContext);
         /// <inheritdoc />
         public override ISocketMessageHandler CreateMessageConverter(WebSocketMessageType messageType) => new PolymarketSocketSpotMessageHandler();
@@ -124,10 +122,6 @@ namespace Polymarket.Net.Clients.ClobApi
                 onSportsUpdate);
             return await SubscribeAsync(_sportUri.AppendPath("ws"), subscription, ct).ConfigureAwait(false);
         }
-
-        /// <inheritdoc />
-        public override string? GetListenerIdentifier(IMessageAccessor message)
-            => throw new NotImplementedException();
 
         /// <inheritdoc />
         public override string FormatSymbol(string baseAsset, string quoteAsset, TradingMode tradingMode, DateTime? deliverDate = null)

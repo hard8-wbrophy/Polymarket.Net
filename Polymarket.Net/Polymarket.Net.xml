@@ -22,9 +22,6 @@
         <member name="P:Polymarket.Net.Clients.ClobApi.PolymarketRestClientClobApi.ExchangeName">
             <inheritdoc />
         </member>
-        <member name="M:Polymarket.Net.Clients.ClobApi.PolymarketRestClientClobApi.CreateAccessor">
-            <inheritdoc />
-        </member>
         <member name="M:Polymarket.Net.Clients.ClobApi.PolymarketRestClientClobApi.CreateSerializer">
             <inheritdoc />
         </member>
@@ -119,9 +116,6 @@
             ctor
             </summary>
         </member>
-        <member name="M:Polymarket.Net.Clients.ClobApi.PolymarketSocketClientClobApi.CreateAccessor(System.Net.WebSockets.WebSocketMessageType)">
-            <inheritdoc />
-        </member>
         <member name="M:Polymarket.Net.Clients.ClobApi.PolymarketSocketClientClobApi.CreateSerializer">
             <inheritdoc />
         </member>
@@ -143,9 +137,6 @@
         <member name="M:Polymarket.Net.Clients.ClobApi.PolymarketSocketClientClobApi.SubscribeToSportsUpdatesAsync(System.Action{CryptoExchange.Net.Objects.Sockets.DataEvent{Polymarket.Net.Objects.Models.PolymarketSportsUpdate}},System.Threading.CancellationToken)">
             <inheritdoc />
         </member>
-        <member name="M:Polymarket.Net.Clients.ClobApi.PolymarketSocketClientClobApi.GetListenerIdentifier(CryptoExchange.Net.Interfaces.IMessageAccessor)">
-            <inheritdoc />
-        </member>
         <member name="M:Polymarket.Net.Clients.ClobApi.PolymarketSocketClientClobApi.FormatSymbol(System.String,System.String,CryptoExchange.Net.SharedApis.TradingMode,System.Nullable{System.DateTime})">
             <inheritdoc />
         </member>
@@ -156,9 +147,6 @@
             <inheritdoc />
         </member>
         <member name="P:Polymarket.Net.Clients.GammaApi.PolymarketRestClientGammaApi.ExchangeName">
-            <inheritdoc />
-        </member>
-        <member name="M:Polymarket.Net.Clients.GammaApi.PolymarketRestClientGammaApi.CreateAccessor">
             <inheritdoc />
         </member>
         <member name="M:Polymarket.Net.Clients.GammaApi.PolymarketRestClientGammaApi.CreateSerializer">

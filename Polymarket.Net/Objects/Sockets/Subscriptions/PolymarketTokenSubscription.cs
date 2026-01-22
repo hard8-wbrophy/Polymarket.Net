@@ -46,6 +46,8 @@ namespace Polymarket.Net.Objects.Sockets.Subscriptions
             _bidAskUpdateHandler = bidAskUpdateHandler;
             _tokenIds = tokenIds;
 
+            IndividualSubscriptionCount = tokenIds.Length;
+
             var routes = new List<MessageRoute>();
 
             foreach(var item in tokenIds)

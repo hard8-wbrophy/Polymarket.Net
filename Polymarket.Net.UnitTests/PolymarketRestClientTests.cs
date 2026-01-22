@@ -16,12 +16,12 @@ namespace Polymarket.Net.UnitTests
         [Test]
         public void CheckSignatureExample1()
         {
-            var chainId = 80002;
+            uint chainId = 80002;
             var privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
             var address = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 
 
-            var authProvider = new PolymarketAuthenticationProvider(new PolymarketCredentials(address, privateKey));
+            var authProvider = new PolymarketAuthenticationProvider(new PolymarketCredentials(Enums.SignType.EOA, privateKey, address));
 
             var parameters = new ParameterCollection
             {
@@ -46,11 +46,11 @@ namespace Polymarket.Net.UnitTests
         [Test]
         public void CheckSignatureExample2()
         {
-            var chainId = 137;
+            uint chainId = 137;
             var privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
             var address = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 
-            var authProvider = new PolymarketAuthenticationProvider(new PolymarketCredentials(address, privateKey));
+            var authProvider = new PolymarketAuthenticationProvider(new PolymarketCredentials(Enums.SignType.EOA, privateKey, address));
 
             var parameters = new ParameterCollection
             {

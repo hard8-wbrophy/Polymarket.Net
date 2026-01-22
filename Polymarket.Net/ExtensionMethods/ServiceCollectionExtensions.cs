@@ -21,7 +21,6 @@ namespace Microsoft.Extensions.DependencyInjection
     /// </summary>
     public static class ServiceCollectionExtensions
     {
-
         /// <summary>
         /// Add services such as the IPolymarketRestClient and IPolymarketSocketClient. Configures the services based on the provided configuration.
         /// </summary>
