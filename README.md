@@ -237,6 +237,10 @@ Make a one time donation in a crypto currency of your choice. If you prefer to d
 Alternatively, sponsor me on Github using [Github Sponsors](https://github.com/sponsors/JKorf). 
 
 ## Release notes
+* Version 1.0.1 - 27 Jan 2026
+    * Fixed signing issue certain token values
+    * Fixed rounding issue in quantity calculation
+
 * Version 1.0.0 - 22 Jan 2026
     * Initial release
 
