@@ -13,8 +13,8 @@ namespace Polymarket.Net.Clients
     /// <inheritdoc />
     public class PolymarketUserClientProvider : IPolymarketUserClientProvider
     {
-        private static ConcurrentDictionary<string, IPolymarketRestClient> _restClients = new ConcurrentDictionary<string, IPolymarketRestClient>();
-        private static ConcurrentDictionary<string, IPolymarketSocketClient> _socketClients = new ConcurrentDictionary<string, IPolymarketSocketClient>();
+        private ConcurrentDictionary<string, IPolymarketRestClient> _restClients = new ConcurrentDictionary<string, IPolymarketRestClient>();
+        private ConcurrentDictionary<string, IPolymarketSocketClient> _socketClients = new ConcurrentDictionary<string, IPolymarketSocketClient>();
         
         private readonly IOptions<PolymarketRestOptions> _restOptions;
         private readonly IOptions<PolymarketSocketOptions> _socketOptions;
