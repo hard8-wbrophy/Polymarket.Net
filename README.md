@@ -237,6 +237,15 @@ Make a one time donation in a crypto currency of your choice. If you prefer to d
 Alternatively, sponsor me on Github using [Github Sponsors](https://github.com/sponsors/JKorf). 
 
 ## Release notes
+* Version 1.4.0 - 24 Feb 2026
+    * Updated CryptoExchange.Net to version 10.7.0
+    * Added restClient.ClobApi.Trading.PostOrderHeartbeatAsync endpoint
+    * Added websocket ping message sending
+    * Added additional Http settings to client options
+    * Updated Shared REST interfaces pagination logic
+    * Updated HttpClient registration, fixing issue of DNS changes not getting processed
+    * Fixed UserClientProvider using unconfigured HttpClient
+
 * Version 1.3.1 - 17 Feb 2026
     * Updated CryptoExchange.Net to version 10.6.2, see https://github.com/JKorf/CryptoExchange.Net/releases/ for full release notes
     * Fixed not correctly handling book snapshot websocket update
