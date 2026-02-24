@@ -1,10 +1,3 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.WebSockets;
-using System.Threading;
-using System.Threading.Tasks;
 using CryptoExchange.Net;
 using CryptoExchange.Net.Authentication;
 using CryptoExchange.Net.Clients;
@@ -24,7 +17,15 @@ using Polymarket.Net.Interfaces.Clients.ClobApi;
 using Polymarket.Net.Objects;
 using Polymarket.Net.Objects.Models;
 using Polymarket.Net.Objects.Options;
+using Polymarket.Net.Objects.Sockets;
 using Polymarket.Net.Objects.Sockets.Subscriptions;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.WebSockets;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Polymarket.Net.Clients.ClobApi
 {
@@ -48,6 +49,20 @@ namespace Polymarket.Net.Clients.ClobApi
             base(logger, options.Environment.ClobSocketClientAddress!, options, options.ClobOptions)
         {
             AddSystemSubscription(new PolymarketGeneralSystemSubscription(_logger));
+
+            RegisterPeriodicQuery(
+                "Ping",
+                TimeSpan.FromSeconds(10),
+                x => new PolymarketPingQuery(),
+                (connection, result) =>
+                {
+                    if (result.Error?.ErrorType == ErrorType.Timeout)
+                    {
+                        // Ping timeout, reconnect
+                        _logger.LogWarning("[Sckt {SocketId}] Ping response timeout, reconnecting", connection.SocketId);
+                        _ = connection.TriggerReconnectAsync();
+                    }
+                });
 
             _sportUri = options.Environment.SportSocketClientAddress;
         }
