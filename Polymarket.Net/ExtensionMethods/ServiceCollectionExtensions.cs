@@ -13,6 +13,7 @@ using Polymarket.Net.Interfaces;
 using Polymarket.Net.Interfaces.Clients;
 using Polymarket.Net.Objects.Options;
 using Polymarket.Net.SymbolOrderBooks;
+using System.Threading;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -94,8 +95,8 @@ namespace Microsoft.Extensions.DependencyInjection
                 return new PolymarketRestClient(client, serviceProvider.GetRequiredService<ILoggerFactory>(), serviceProvider.GetRequiredService<IOptions<PolymarketRestOptions>>());
             }).ConfigurePrimaryHttpMessageHandler((serviceProvider) => {
                 var options = serviceProvider.GetRequiredService<IOptions<PolymarketRestOptions>>().Value;
-                return LibraryHelpers.CreateHttpClientMessageHandler(options.Proxy, options.HttpKeepAliveInterval);
-            });
+                return LibraryHelpers.CreateHttpClientMessageHandler(options);
+            }).SetHandlerLifetime(Timeout.InfiniteTimeSpan);
             services.Add(new ServiceDescriptor(typeof(IPolymarketSocketClient), x => { return new PolymarketSocketClient(x.GetRequiredService<IOptions<PolymarketSocketOptions>>(), x.GetRequiredService<ILoggerFactory>()); }, socketClientLifeTime ?? ServiceLifetime.Singleton));
 
             services.AddTransient<ICryptoRestClient, CryptoRestClient>();
@@ -103,7 +104,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddTransient<IPolymarketOrderBookFactory, PolymarketOrderBookFactory>();
             services.AddSingleton<IPolymarketUserClientProvider, PolymarketUserClientProvider>(x =>
                 new PolymarketUserClientProvider(
-                    x.GetRequiredService<HttpClient>(),
+                    x.GetRequiredService<IHttpClientFactory>().CreateClient(typeof(IPolymarketRestClient).Name),
                     x.GetRequiredService<ILoggerFactory>(),
                     x.GetRequiredService<IOptions<PolymarketRestOptions>>(),
                     x.GetRequiredService<IOptions<PolymarketSocketOptions>>()));
