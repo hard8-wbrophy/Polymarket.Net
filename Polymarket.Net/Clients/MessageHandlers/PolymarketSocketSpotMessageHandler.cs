@@ -3,6 +3,8 @@ using System.Text.Json;
 using CryptoExchange.Net.Converters.SystemTextJson.MessageHandlers;
 using Polymarket.Net.Objects.Models;
 using System.Linq;
+using System;
+using System.Net.WebSockets;
 
 namespace Polymarket.Net.Clients.MessageHandlers
 {
@@ -42,5 +44,13 @@ namespace Polymarket.Net.Clients.MessageHandlers
                 StaticIdentifier = "sports"
             }
         ];
+
+        protected override string? GetTypeIdentifierNonJson(ReadOnlySpan<byte> data, WebSocketMessageType? webSocketMessageType)
+        {
+            if (data.Length == 4)
+                return "pong";
+
+            return null;
+        }
     }
 }
