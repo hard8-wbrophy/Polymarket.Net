@@ -262,6 +262,61 @@
         <member name="M:Polymarket.Net.Clients.PolymarketRestClient.SetApiCredentials(Polymarket.Net.Objects.PolymarketCredentials)">
             <inheritdoc />
         </member>
+        <member name="T:Polymarket.Net.Clients.PolymarketRtdsClient">
+            <summary>
+            A simple WebSocket client for the Polymarket Real-Time Data Socket (RTDS).
+            Connects to <c>wss://ws-live-data.polymarket.com</c> and streams real-time
+            Chainlink crypto price updates.
+            </summary>
+        </member>
+        <member name="E:Polymarket.Net.Clients.PolymarketRtdsClient.OnChainlinkPriceUpdate">
+            <summary>
+            Raised when a Chainlink price update is received
+            </summary>
+        </member>
+        <member name="E:Polymarket.Net.Clients.PolymarketRtdsClient.OnConnected">
+            <summary>
+            Raised when the connection is established
+            </summary>
+        </member>
+        <member name="E:Polymarket.Net.Clients.PolymarketRtdsClient.OnDisconnected">
+            <summary>
+            Raised when the connection is closed
+            </summary>
+        </member>
+        <member name="E:Polymarket.Net.Clients.PolymarketRtdsClient.OnError">
+            <summary>
+            Raised when an error occurs
+            </summary>
+        </member>
+        <member name="M:Polymarket.Net.Clients.PolymarketRtdsClient.#ctor(Microsoft.Extensions.Logging.ILogger{Polymarket.Net.Clients.PolymarketRtdsClient})">
+            <summary>
+            Create a new instance of <see cref="T:Polymarket.Net.Clients.PolymarketRtdsClient"/> using default addresses
+            </summary>
+        </member>
+        <member name="M:Polymarket.Net.Clients.PolymarketRtdsClient.#ctor(System.String,Microsoft.Extensions.Logging.ILogger{Polymarket.Net.Clients.PolymarketRtdsClient})">
+            <summary>
+            Create a new instance of <see cref="T:Polymarket.Net.Clients.PolymarketRtdsClient"/> with a custom endpoint
+            </summary>
+            <param name="endpoint">WebSocket endpoint URI</param>
+            <param name="logger">Optional logger</param>
+        </member>
+        <member name="M:Polymarket.Net.Clients.PolymarketRtdsClient.ConnectAsync(System.Collections.Generic.IEnumerable{System.String},System.Threading.CancellationToken)">
+            <summary>
+            Connect and subscribe to Chainlink prices for the given symbols.
+            Runs until the <paramref name="ct"/> is cancelled or the connection is closed.
+            </summary>
+            <param name="symbols">Symbols to subscribe to (e.g., <c>"btc/usd"</c>, <c>"eth/usd"</c>)</param>
+            <param name="ct">Cancellation token</param>
+        </member>
+        <member name="M:Polymarket.Net.Clients.PolymarketRtdsClient.DisconnectAsync">
+            <summary>
+            Disconnect and close the WebSocket connection
+            </summary>
+        </member>
+        <member name="M:Polymarket.Net.Clients.PolymarketRtdsClient.Dispose">
+            <inheritdoc />
+        </member>
         <member name="T:Polymarket.Net.Clients.PolymarketSocketClient">
             <inheritdoc cref="T:Polymarket.Net.Interfaces.Clients.IPolymarketSocketClient" />
         </member>
@@ -4486,6 +4541,51 @@
             Rank
             </summary>
         </member>
+        <member name="T:Polymarket.Net.Objects.Models.PolymarketRtdsMessage">
+            <summary>
+            A message received from the Polymarket Real-Time Data Socket (RTDS)
+            </summary>
+        </member>
+        <member name="P:Polymarket.Net.Objects.Models.PolymarketRtdsMessage.Topic">
+            <summary>
+            The subscription topic (e.g., <c>crypto_prices_chainlink</c>)
+            </summary>
+        </member>
+        <member name="P:Polymarket.Net.Objects.Models.PolymarketRtdsMessage.Type">
+            <summary>
+            The message type/event (e.g., <c>update</c>)
+            </summary>
+        </member>
+        <member name="P:Polymarket.Net.Objects.Models.PolymarketRtdsMessage.Timestamp">
+            <summary>
+            Unix timestamp in milliseconds when the message was sent
+            </summary>
+        </member>
+        <member name="P:Polymarket.Net.Objects.Models.PolymarketRtdsMessage.Payload">
+            <summary>
+            Chainlink price payload
+            </summary>
+        </member>
+        <member name="T:Polymarket.Net.Objects.Models.PolymarketChainlinkPricePayload">
+            <summary>
+            Chainlink crypto price payload from the RTDS
+            </summary>
+        </member>
+        <member name="P:Polymarket.Net.Objects.Models.PolymarketChainlinkPricePayload.Symbol">
+            <summary>
+            Trading pair symbol in slash-separated format (e.g., <c>btc/usd</c>, <c>eth/usd</c>)
+            </summary>
+        </member>
+        <member name="P:Polymarket.Net.Objects.Models.PolymarketChainlinkPricePayload.Timestamp">
+            <summary>
+            Unix timestamp in milliseconds when the price was recorded
+            </summary>
+        </member>
+        <member name="P:Polymarket.Net.Objects.Models.PolymarketChainlinkPricePayload.Value">
+            <summary>
+            Current price value in the quote currency
+            </summary>
+        </member>
         <member name="T:Polymarket.Net.Objects.Models.PolymarketSearchResult">
             <summary>
             Search results
@@ -5519,6 +5619,11 @@
         <member name="P:Polymarket.Net.Objects.PolymarketApiAddresses.SportsSocketClientAddress">
             <summary>
             The address used by the PolymarketSocketClient for the Sport websocket API
+            </summary>
+        </member>
+        <member name="P:Polymarket.Net.Objects.PolymarketApiAddresses.RtdsSocketClientAddress">
+            <summary>
+            The address used by the PolymarketRtdsClient for the Real-Time Data Socket
             </summary>
         </member>
         <member name="F:Polymarket.Net.Objects.PolymarketApiAddresses.Default">

@@ -24,6 +24,11 @@ namespace Polymarket.Net.Objects
         public string SportsSocketClientAddress { get; set; } = "";
 
         /// <summary>
+        /// The address used by the PolymarketRtdsClient for the Real-Time Data Socket
+        /// </summary>
+        public string RtdsSocketClientAddress { get; set; } = "";
+
+        /// <summary>
         /// The default addresses to connect to the Polymarket API
         /// </summary>
         public static PolymarketApiAddresses Default = new PolymarketApiAddresses
@@ -31,7 +36,8 @@ namespace Polymarket.Net.Objects
             ClobRestClientAddress = "https://clob.polymarket.com",
             GammaRestClientAddress = "https://gamma-api.polymarket.com",
             ClobSocketClientAddress = "wss://ws-subscriptions-clob.polymarket.com",
-            SportsSocketClientAddress = "wss://sports-api.polymarket.com"
+            SportsSocketClientAddress = "wss://sports-api.polymarket.com",
+            RtdsSocketClientAddress = "wss://ws-live-data.polymarket.com"
         };
     }
 }
