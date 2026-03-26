@@ -11,32 +11,32 @@ namespace Polymarket.Net.Enums
     public enum DataInterval
     {
         /// <summary>
-        /// One hour
+        /// ["<c>1h</c>"] One hour
         /// </summary>
         [Map("1h")]
         OneHour,
         /// <summary>
-        /// Six hours
+        /// ["<c>6h</c>"] Six hours
         /// </summary>
         [Map("6h")]
         SixHours,
         /// <summary>
-        /// One day
+        /// ["<c>1d</c>"] One day
         /// </summary>
         [Map("1d")]
         OneDay,
         /// <summary>
-        /// One week
+        /// ["<c>1w</c>"] One week
         /// </summary>
         [Map("1w")]
         OneWeek,
         /// <summary>
-        /// One month
+        /// ["<c>1m</c>"] One month
         /// </summary>
         [Map("1m")]
         OneMonth,
         /// <summary>
-        /// Max
+        /// ["<c>max</c>"] Max
         /// </summary>
         [Map("max")]
         Max

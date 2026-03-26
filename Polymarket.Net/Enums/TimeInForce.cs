@@ -16,22 +16,22 @@ namespace Polymarket.Net.Enums
     public enum TimeInForce
     {
         /// <summary>
-        /// Fill immediately or cancel
+        /// ["<c>FOK</c>"] Fill fully immediately or cancel
         /// </summary>
         [Map("FOK")]
         FillOrKill,
         /// <summary>
-        /// Fill immediately or cancel
+        /// ["<c>FAK</c>"] Fill at least partially immediately or cancel
         /// </summary>
         [Map("FAK")]
         ImmediateOrCancel,
         /// <summary>
-        /// Good until canceled
+        /// ["<c>GTC</c>"] Good until canceled
         /// </summary>
         [Map("GTC")]
         GoodTillCanceled,
         /// <summary>
-        /// Good till specific timestamp
+        /// ["<c>GTD</c>"] Good till specific timestamp
         /// </summary>
         [Map("GTD")]
         GoodTillDate

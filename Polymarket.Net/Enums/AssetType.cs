@@ -11,12 +11,12 @@ namespace Polymarket.Net.Enums
     public enum AssetType
     {
         /// <summary>
-        /// Collateral
+        /// ["<c>COLLATERAL</c>"] Collateral
         /// </summary>
         [Map("COLLATERAL")]
         Collateral,
         /// <summary>
-        /// Conditional
+        /// ["<c>CONDITIONAL</c>"] Conditional
         /// </summary>
         [Map("CONDITIONAL")]
         Conditional

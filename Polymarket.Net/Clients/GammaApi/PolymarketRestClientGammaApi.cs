@@ -14,7 +14,6 @@ using CryptoExchange.Net.SharedApis;
 using CryptoExchange.Net.Objects.Errors;
 using CryptoExchange.Net.Converters.MessageParsing.DynamicConverters;
 using Polymarket.Net.Clients.MessageHandlers;
-using Polymarket.Net.Objects;
 using Polymarket.Net.Objects.Models;
 using System.Collections.Generic;
 using Polymarket.Net.Enums;
@@ -23,7 +22,7 @@ using CryptoExchange.Net.RateLimiting.Guards;
 namespace Polymarket.Net.Clients.GammaApi
 {
     /// <inheritdoc cref="IPolymarketRestClientGammaApi" />
-    internal partial class PolymarketRestClientGammaApi : RestApiClient, IPolymarketRestClientGammaApi
+    internal partial class PolymarketRestClientGammaApi : RestApiClient<PolymarketEnvironment, PolymarketAuthenticationProvider, PolymarketCredentials>, IPolymarketRestClientGammaApi
     {
         #region fields 
         private static readonly RequestDefinitionCache _definitions = new RequestDefinitionCache();
@@ -58,8 +57,8 @@ namespace Polymarket.Net.Clients.GammaApi
 
 
         /// <inheritdoc />
-        protected override AuthenticationProvider CreateAuthenticationProvider(ApiCredentials credentials)
-            => new PolymarketAuthenticationProvider((PolymarketCredentials)credentials);
+        protected override PolymarketAuthenticationProvider CreateAuthenticationProvider(PolymarketCredentials credentials)
+            => new PolymarketAuthenticationProvider(credentials);
 
         internal Task<WebCallResult> SendAsync(RequestDefinition definition, ParameterCollection? parameters, CancellationToken cancellationToken, int? weight = null)
             => SendToAddressAsync(BaseAddress, definition, parameters, cancellationToken, weight);
@@ -391,6 +390,7 @@ namespace Polymarket.Net.Clients.GammaApi
             parameters.AddOptional("tag_id", tagId);
             parameters.AddOptional("slug", slugs);
             parameters.AddOptional("clob_token_ids", clobTokenIds);
+            parameters.AddOptional("condition_ids", conditionIds);
             parameters.AddOptional("market_maker_address", marketMakerAddresses);
             parameters.AddOptional("uma_resolution_status", umaResolutionStatus);
             parameters.AddOptional("game_id", gameId);

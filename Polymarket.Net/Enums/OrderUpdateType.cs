@@ -16,17 +16,17 @@ namespace Polymarket.Net.Enums
     public enum OrderUpdateType
     {
         /// <summary>
-        /// Order placed
+        /// ["<c>PLACEMENT</c>"] Order placed
         /// </summary>
         [Map("PLACEMENT")]
         Placed,
         /// <summary>
-        /// Order updated
+        /// ["<c>UPDATE</c>"] Order updated
         /// </summary>
         [Map("UPDATE")]
         Update,
         /// <summary>
-        /// Order canceled
+        /// ["<c>CANCELLATION</c>"] Order canceled
         /// </summary>
         [Map("CANCELLATION")]
         Canceled,

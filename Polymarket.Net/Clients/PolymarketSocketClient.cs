@@ -1,4 +1,3 @@
-using CryptoExchange.Net.Authentication;
 using CryptoExchange.Net.Clients;
 using CryptoExchange.Net.Objects.Options;
 using Microsoft.Extensions.Logging;
@@ -11,12 +10,12 @@ using Polymarket.Net.Clients.ClobApi;
 using Polymarket.Net.Clients.GammaApi;
 using Polymarket.Net.Interfaces.Clients.GammaApi;
 using Polymarket.Net.Objects.Models;
-using Polymarket.Net.Objects;
+using CryptoExchange.Net.Authentication;
 
 namespace Polymarket.Net.Clients
 {
     /// <inheritdoc cref="IPolymarketSocketClient" />
-    public class PolymarketSocketClient : BaseSocketClient, IPolymarketSocketClient
+    public class PolymarketSocketClient : BaseSocketClient<PolymarketEnvironment, PolymarketCredentials>, IPolymarketSocketClient
     {
         #region fields
         #endregion
@@ -52,12 +51,6 @@ namespace Polymarket.Net.Clients
         }
         #endregion
 
-        /// <inheritdoc />
-        public void SetOptions(UpdateOptions options)
-        {
-            ClobApi.SetOptions(options);
-        }
-
         /// <summary>
         /// Set the default options to be used when creating new clients
         /// </summary>
@@ -73,26 +66,14 @@ namespace Polymarket.Net.Clients
             if (credentials == null)
                 throw new ArgumentNullException(nameof(credentials));
 
-            var existingCreds = (PolymarketCredentials?)((PolymarketRestClientClobApi)ClobApi).ApiCredentials;
-            if (existingCreds == null)
-                throw new InvalidOperationException("UpdateL2Credentials can not be called without having initial L1 credentials. Use `SetApiCredentials` to set full credentials");
+            var existingCreds = ((PolymarketSocketClientClobApi)ClobApi).ApiCredentials
+                ?? throw new InvalidOperationException("UpdateL2Credentials can not be called without having initial L1 credentials. Use `SetApiCredentials` to set full credentials");
 
-            var newCredentials = new PolymarketCredentials(
-                existingCreds.SignatureType,
-                existingCreds.L1PrivateKey,
-                credentials.ApiKey,
-                credentials.Secret,
-                credentials.Passphrase,
-                existingCreds.PolymarketFundingAddress
-                );
-
-            SetApiCredentials(newCredentials);
+            SetApiCredentials(
+                new PolymarketCredentials()
+                    .WithL1(existingCreds.L1.SignType, existingCreds.L1.PrivateKey, existingCreds.L1.PolymarketFundingAddress)
+                    .WithL2(credentials.ApiKey, credentials.Secret, credentials.Passphrase));
         }
 
-        /// <inheritdoc />
-        public void SetApiCredentials(ApiCredentials credentials)
-        {            
-            ClobApi.SetApiCredentials(credentials);
-        }
     }
 }

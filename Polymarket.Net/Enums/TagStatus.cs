@@ -16,17 +16,17 @@ namespace Polymarket.Net.Enums
     public enum TagStatus
     {
         /// <summary>
-        /// Active
+        /// ["<c>active</c>"] Active
         /// </summary>
         [Map("active")]
         Active,
         /// <summary>
-        /// Closed
+        /// ["<c>closed</c>"] Closed
         /// </summary>
         [Map("closed")]
         Closed,
         /// <summary>
-        /// All
+        /// ["<c>all</c>"] All
         /// </summary>
         [Map("all")]
         All

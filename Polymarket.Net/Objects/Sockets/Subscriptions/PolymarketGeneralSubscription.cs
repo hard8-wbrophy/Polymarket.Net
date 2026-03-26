@@ -34,7 +34,7 @@ namespace Polymarket.Net.Objects.Sockets.Subscriptions
 
             MessageRouter = MessageRouter.Create([
                 MessageRoute<PolymarketNewMarketUpdate>.CreateWithoutTopicFilter("new_market", DoHandleMessage),
-                MessageRoute<PolymarketNewMarketUpdate>.CreateWithoutTopicFilter("market_resolved", DoHandleMessage)
+                MessageRoute<PolymarketMarketResolvedUpdate>.CreateWithoutTopicFilter("market_resolved", DoHandleMessage)
                 ]);
         }
 

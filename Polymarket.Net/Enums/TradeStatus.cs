@@ -11,27 +11,27 @@ namespace Polymarket.Net.Enums
     public enum TradeStatus
     {
         /// <summary>
-        /// Matched
+        /// ["<c>MATCHED</c>"] Matched
         /// </summary>
         [Map("MATCHED")]
         Matched,
         /// <summary>
-        /// Mined
+        /// ["<c>MINED</c>"] Mined
         /// </summary>
         [Map("MINED")]
         Mined,
         /// <summary>
-        /// Confirmed
+        /// ["<c>CONFIRMED</c>"] Confirmed
         /// </summary>
         [Map("CONFIRMED")]
         Confirmed,
         /// <summary>
-        /// Retrying
+        /// ["<c>RETRYING</c>"] Retrying
         /// </summary>
         [Map("RETRYING")]
         Retrying,
         /// <summary>
-        /// Failed
+        /// ["<c>FAILED</c>"] Failed
         /// </summary>
         [Map("FAILED")]
         Failed,

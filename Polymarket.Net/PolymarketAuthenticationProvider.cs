@@ -1,5 +1,5 @@
-using CryptoExchange.Net;
 using CryptoExchange.Net.Authentication;
+using CryptoExchange.Net.Authentication.Signing;
 using CryptoExchange.Net.Clients;
 using CryptoExchange.Net.Converters.SystemTextJson;
 using CryptoExchange.Net.Interfaces;
@@ -7,10 +7,8 @@ using CryptoExchange.Net.Objects;
 using CryptoExchange.Net.Sockets;
 using CryptoExchange.Net.Sockets.Default;
 using Polymarket.Net.Enums;
-using Polymarket.Net.Objects;
 using Polymarket.Net.Objects.Options;
 using Polymarket.Net.Objects.Sockets;
-using Polymarket.Net.Signing;
 using Polymarket.Net.Utils;
 using Secp256k1Net;
 using System;
@@ -23,31 +21,14 @@ namespace Polymarket.Net
 {
     internal class PolymarketAuthenticationProvider : AuthenticationProvider<PolymarketCredentials>
     {
-        private string? _publicAddress;
-        private byte[]? _hmacBytes;
-
         private const string _l1SignMessage = "This message attests that I control the given wallet";
 
         private static IStringMessageSerializer _serializer = new SystemTextJsonMessageSerializer(PolymarketPlatform._serializerContext);
 
-        public string PublicAddress => GetPublicAddress();
-        public SignType SignatureType => _credentials.SignatureType;
-        public string? PolymarketFundingAddress => _credentials.PolymarketFundingAddress;
-        public override ApiCredentialsType[] SupportedCredentialTypes => [ApiCredentialsType.Hmac];
+        public override string Key => ApiCredentials.L1.Key;
 
         public PolymarketAuthenticationProvider(PolymarketCredentials credentials) : base(credentials)
         {
-            if (!string.IsNullOrEmpty(_credentials.L2Secret))
-            {
-                try
-                {
-                    _hmacBytes = Convert.FromBase64String(_credentials.L2Secret!.Replace('-', '+').Replace('_', '/'));
-                }
-                catch (Exception ex)
-                {
-                    throw new ArgumentException("Provided secret invalid, not in base64 format", ex);
-                }
-            }
         }
 
         public override void ProcessRequest(RestApiClient apiClient, RestRequestConfiguration requestConfig)
@@ -63,6 +44,9 @@ namespace Polymarket.Net
             }
             else
             {
+                if (ApiCredentials.L2 == null)
+                    throw new InvalidOperationException("Layer 2 credentials required");
+
                 // L2 authentication
                 SignL2(apiClient, requestConfig);
             }
@@ -70,10 +54,10 @@ namespace Polymarket.Net
 
         public override Query? GetAuthenticationQuery(SocketApiClient apiClient, SocketConnection connection, Dictionary<string, object?>? context = null)
         {
-            if (_credentials.L2ApiKey == null)
+            if (ApiCredentials.L2 == null)
                 throw new InvalidOperationException("Layer 2 credentials required");
 
-            return new PolymarketInitialQuery<object>("USER", _credentials.L2ApiKey, _credentials.L2Secret!, _credentials.L2Pass!);
+            return new PolymarketInitialQuery<object>("USER", ApiCredentials.L2.Key, ApiCredentials.L2.Secret!, ApiCredentials.L2.Pass!);
         }
 
         private void SignL1Custom(RestRequestConfiguration requestConfig, uint chainId)
@@ -82,27 +66,27 @@ namespace Polymarket.Net
             requestConfig.GetPositionParameters().TryGetValue("nonce", out var nonce);
 
             var typeRaw = GetEncodedClobAuth(timestamp.ToString()!, nonce == null ? 0 : (long)nonce, chainId);
-            var msg = LightEip712TypedDataEncoder.EncodeTypedDataRaw(typeRaw);
-            var keccakSigned = InternalSha3Keccack.CalculateHash(msg);
+            var msg = CeEip712TypedDataEncoder.EncodeTypedDataRaw(typeRaw);
+            var keccakSigned = CeSha3Keccack.CalculateHash(msg);
 
             var signature = SignHash(keccakSigned);
             requestConfig.Headers ??= new Dictionary<string, string>();
-            requestConfig.Headers.Add("POLY_ADDRESS", GetPublicAddress());
+            requestConfig.Headers.Add("POLY_ADDRESS", ApiCredentials.L1.GetPublicAddress());
             requestConfig.Headers.Add("POLY_SIGNATURE", signature.ToLowerInvariant());
             requestConfig.Headers.Add("POLY_TIMESTAMP", timestamp.Value.ToString());
             requestConfig.Headers.Add("POLY_NONCE", nonce?.ToString() ?? "0");
         }
 
+        private byte[]? _hmacBytes;
+
         private void SignL2(RestApiClient client, RestRequestConfiguration requestConfig)
         {
-            if (_hmacBytes == null)
-                throw new ArgumentException("Layer 2 credentials required");
-
+            _hmacBytes ??= Convert.FromBase64String(ApiCredentials.L2!.Secret!.Replace('-', '+').Replace('_', '/'));
             var timestamp = DateTimeConverter.ConvertToSeconds(DateTime.UtcNow);
             requestConfig.Headers ??= new Dictionary<string, string>();
-            requestConfig.Headers.Add("POLY_ADDRESS", GetPublicAddress());
-            requestConfig.Headers.Add("POLY_API_KEY", _credentials.L2ApiKey!);
-            requestConfig.Headers.Add("POLY_PASSPHRASE", _credentials.L2Pass!);
+            requestConfig.Headers.Add("POLY_ADDRESS", ApiCredentials.L1.Key!);
+            requestConfig.Headers.Add("POLY_API_KEY", ApiCredentials.L2!.Key!);
+            requestConfig.Headers.Add("POLY_PASSPHRASE", ApiCredentials.L2.Pass!);
             requestConfig.Headers.Add("POLY_TIMESTAMP", timestamp.Value.ToString());
 
             var signData = timestamp + requestConfig.Method.ToString() + requestConfig.Path;
@@ -141,35 +125,19 @@ namespace Polymarket.Net
             requestConfig.Headers.Add("POLY_BUILDER_TIMESTAMP", timestamp.Value.ToString());
         }
 
-        public string GetPublicAddress()
-        {
-            if (_publicAddress != null)
-                return _publicAddress;
-
-            var publicKeyBytes = Secp256k1.CreatePublicKey(HexToBytesString(_credentials.L1PrivateKey), false);
-
-            var withoutPrefix = new byte[64];
-            Array.Copy(publicKeyBytes, 1, withoutPrefix, 0, 64);
-
-            var hash = InternalSha3Keccack.CalculateHash(withoutPrefix);
-            var pubAddress = new byte[20];
-            Array.Copy(hash, hash.Length - 20, pubAddress, 0, 20);
-
-            _publicAddress = "0x" + BytesToHexString(pubAddress); // Public address
-            return _publicAddress;
-        }
+        
 
         public string GetOrderSignature(ParameterCollection parameters, uint chainId, bool negativeRisk)
         {
             var typeRaw = GetTypeDataRawCustom(parameters, chainId, negativeRisk);
-            var msg = LightEip712TypedDataEncoder.EncodeTypedDataRaw(typeRaw);
-            var orderHashBytes = InternalSha3Keccack.CalculateHash(msg);
+            var msg = CeEip712TypedDataEncoder.EncodeTypedDataRaw(typeRaw);
+            var orderHashBytes = CeSha3Keccack.CalculateHash(msg);
             return SignHash(orderHashBytes);
         }
 
         private string SignHash(byte[] hash)
         {
-            (var signature, var recover) = Secp256k1.SignRecoverable(hash, HexToBytesString(_credentials.L1PrivateKey));
+            (var signature, var recover) = Secp256k1.SignRecoverable(hash, HexToBytesString(ApiCredentials.L1.PrivateKey));
             var hexCompactR = BytesToHexString(new ArraySegment<byte>(signature, 0, 32));
             var hexCompactS = BytesToHexString(new ArraySegment<byte>(signature, 32, 32));
             var hexCompactV = BytesToHexString([(byte)(recover + 27)]);
@@ -190,100 +158,100 @@ namespace Polymarket.Net
                 throw new InvalidOperationException("Unknown chainId: " + chainId);
         }
 
-        private TypedDataRaw GetTypeDataRawCustom(ParameterCollection order, uint chainId, bool negativeRisk)
+        private CeTypedDataRaw GetTypeDataRawCustom(ParameterCollection order, uint chainId, bool negativeRisk)
         {
-            return new TypedDataRaw
+            return new CeTypedDataRaw
             {
                 PrimaryType = "Order",
-                DomainRawValues = new MemberValue[]
+                DomainRawValues = new CeMemberValue[]
                 {
-                    new MemberValue { TypeName = "string", Value = "Polymarket CTF Exchange" },
-                    new MemberValue { TypeName = "string", Value = "1" },
-                    new MemberValue { TypeName = "uint256", Value = chainId },
-                    new MemberValue { TypeName = "address", Value = GetContract(order, chainId, negativeRisk) }
+                    new CeMemberValue { TypeName = "string", Value = "Polymarket CTF Exchange" },
+                    new CeMemberValue { TypeName = "string", Value = "1" },
+                    new CeMemberValue { TypeName = "uint256", Value = chainId },
+                    new CeMemberValue { TypeName = "address", Value = GetContract(order, chainId, negativeRisk) }
                 },
-                Message = new MemberValue[]
+                Message = new CeMemberValue[]
                 {
-                    new MemberValue { TypeName = "uint256", Value = order["salt"].ToString()! },
-                    new MemberValue { TypeName = "address", Value = order["maker"]},
-                    new MemberValue { TypeName = "address", Value = order["signer"]},
-                    new MemberValue { TypeName = "address", Value = order["taker"]},
-                    new MemberValue { TypeName = "uint256", Value = (string)order["tokenId"]},
-                    new MemberValue { TypeName = "uint256", Value = (string)order["makerAmount"]},
-                    new MemberValue { TypeName = "uint256", Value = (string)order["takerAmount"]},
-                    new MemberValue { TypeName = "uint256", Value = (string)order["expiration"]},
-                    new MemberValue { TypeName = "uint256", Value = (string)order["nonce"]},
-                    new MemberValue { TypeName = "uint256", Value = (string)order["feeRateBps"]},
-                    new MemberValue { TypeName = "uint8", Value = (byte)((string)order["side"] == "BUY" ? 0 : 1)},
-                    new MemberValue { TypeName = "uint8", Value = (byte)(int)order["signatureType"]}
+                    new CeMemberValue { TypeName = "uint256", Value = order["salt"].ToString()! },
+                    new CeMemberValue { TypeName = "address", Value = order["maker"]},
+                    new CeMemberValue { TypeName = "address", Value = order["signer"]},
+                    new CeMemberValue { TypeName = "address", Value = order["taker"]},
+                    new CeMemberValue { TypeName = "uint256", Value = (string)order["tokenId"]},
+                    new CeMemberValue { TypeName = "uint256", Value = (string)order["makerAmount"]},
+                    new CeMemberValue { TypeName = "uint256", Value = (string)order["takerAmount"]},
+                    new CeMemberValue { TypeName = "uint256", Value = (string)order["expiration"]},
+                    new CeMemberValue { TypeName = "uint256", Value = (string)order["nonce"]},
+                    new CeMemberValue { TypeName = "uint256", Value = (string)order["feeRateBps"]},
+                    new CeMemberValue { TypeName = "uint8", Value = (byte)((string)order["side"] == "BUY" ? 0 : 1)},
+                    new CeMemberValue { TypeName = "uint8", Value = (byte)(int)order["signatureType"]}
                 },
-                Types = new Dictionary<string, MemberDescription[]>
+                Types = new Dictionary<string, CeMemberDescription[]>
                 {
                     { "EIP712Domain",
-                        new MemberDescription[]
+                        new CeMemberDescription[]
                         {
-                            new MemberDescription { Name = "name", Type = "string" },
-                            new MemberDescription { Name = "version", Type = "string" },
-                            new MemberDescription { Name = "chainId", Type = "uint256" },
-                            new MemberDescription { Name = "verifyingContract", Type = "address" }
+                            new CeMemberDescription { Name = "name", Type = "string" },
+                            new CeMemberDescription { Name = "version", Type = "string" },
+                            new CeMemberDescription { Name = "chainId", Type = "uint256" },
+                            new CeMemberDescription { Name = "verifyingContract", Type = "address" }
                         }
                     },
                     { "Order",
-                        new MemberDescription[]
+                        new CeMemberDescription[]
                         {
-                            new MemberDescription { Name = "salt", Type = "uint256" },
-                            new MemberDescription { Name = "maker", Type = "address" },
-                            new MemberDescription { Name = "signer", Type = "address" },
-                            new MemberDescription { Name = "taker", Type = "address" },
-                            new MemberDescription { Name = "tokenId", Type = "uint256" },
-                            new MemberDescription { Name = "makerAmount", Type = "uint256" },
-                            new MemberDescription { Name = "takerAmount", Type = "uint256" },
-                            new MemberDescription { Name = "expiration", Type = "uint256" },
-                            new MemberDescription { Name = "nonce", Type = "uint256" },
-                            new MemberDescription { Name = "feeRateBps", Type = "uint256" },
-                            new MemberDescription { Name = "side", Type = "uint8" },
-                            new MemberDescription { Name = "signatureType", Type = "uint8" },
+                            new CeMemberDescription { Name = "salt", Type = "uint256" },
+                            new CeMemberDescription { Name = "maker", Type = "address" },
+                            new CeMemberDescription { Name = "signer", Type = "address" },
+                            new CeMemberDescription { Name = "taker", Type = "address" },
+                            new CeMemberDescription { Name = "tokenId", Type = "uint256" },
+                            new CeMemberDescription { Name = "makerAmount", Type = "uint256" },
+                            new CeMemberDescription { Name = "takerAmount", Type = "uint256" },
+                            new CeMemberDescription { Name = "expiration", Type = "uint256" },
+                            new CeMemberDescription { Name = "nonce", Type = "uint256" },
+                            new CeMemberDescription { Name = "feeRateBps", Type = "uint256" },
+                            new CeMemberDescription { Name = "side", Type = "uint8" },
+                            new CeMemberDescription { Name = "signatureType", Type = "uint8" },
                         }
                     }
                 }
             };
         }
 
-        public TypedDataRaw GetEncodedClobAuth(string timestamp, long nonce, uint chainId)
+        public CeTypedDataRaw GetEncodedClobAuth(string timestamp, long nonce, uint chainId)
         {
-            return new TypedDataRaw
+            return new CeTypedDataRaw
             {
                 PrimaryType = "ClobAuth",
-                DomainRawValues = new MemberValue[]
+                DomainRawValues = new CeMemberValue[]
                 {
-                    new MemberValue { TypeName = "string", Value = "ClobAuthDomain" },
-                    new MemberValue { TypeName = "string", Value = "1" },
-                    new MemberValue { TypeName = "uint256", Value = chainId },
+                    new CeMemberValue { TypeName = "string", Value = "ClobAuthDomain" },
+                    new CeMemberValue { TypeName = "string", Value = "1" },
+                    new CeMemberValue { TypeName = "uint256", Value = chainId },
                 },
-                Message = new MemberValue[]
+                Message = new CeMemberValue[]
                 {
-                    new MemberValue { TypeName = "address", Value = PublicAddress },
-                    new MemberValue { TypeName = "string", Value = timestamp },
-                    new MemberValue { TypeName = "uint256", Value = nonce },
-                    new MemberValue { TypeName = "string", Value = _l1SignMessage }
+                    new CeMemberValue { TypeName = "address", Value = ApiCredentials.L1.GetPublicAddress() },
+                    new CeMemberValue { TypeName = "string", Value = timestamp },
+                    new CeMemberValue { TypeName = "uint256", Value = nonce },
+                    new CeMemberValue { TypeName = "string", Value = _l1SignMessage }
                 },
-                Types = new Dictionary<string, MemberDescription[]>
+                Types = new Dictionary<string, CeMemberDescription[]>
                 {
                     { "EIP712Domain",
-                        new MemberDescription[]
+                        new CeMemberDescription[]
                         {
-                            new MemberDescription { Name = "name", Type = "string" },
-                            new MemberDescription { Name = "version", Type = "string" },
-                            new MemberDescription { Name = "chainId", Type = "uint256" }
+                            new CeMemberDescription { Name = "name", Type = "string" },
+                            new CeMemberDescription { Name = "version", Type = "string" },
+                            new CeMemberDescription { Name = "chainId", Type = "uint256" }
                         }
                     },
                     { "ClobAuth",
-                        new MemberDescription[]
+                        new CeMemberDescription[]
                         {
-                            new MemberDescription { Name = "address", Type = "address" },
-                            new MemberDescription { Name = "timestamp", Type = "string" },
-                            new MemberDescription { Name = "nonce", Type = "uint256" },
-                            new MemberDescription { Name = "message", Type = "string" }
+                            new CeMemberDescription { Name = "address", Type = "address" },
+                            new CeMemberDescription { Name = "timestamp", Type = "string" },
+                            new CeMemberDescription { Name = "nonce", Type = "uint256" },
+                            new CeMemberDescription { Name = "message", Type = "string" }
                         }
                     }
                 }

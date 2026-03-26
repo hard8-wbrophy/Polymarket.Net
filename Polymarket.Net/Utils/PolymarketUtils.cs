@@ -27,7 +27,7 @@ namespace Polymarket.Net.Utils
             {
                 var envName = client.ClientOptions.Environment.Name;
                 if (envName.Equals("UnitTest", StringComparison.Ordinal))
-                    return new CallResult<PolymarketOrderBook>(new PolymarketOrderBook { });
+                    return new CallResult<PolymarketOrderBook>(new PolymarketOrderBook { TickQuantity = 0.1m });
 
                 if (_tokenInfos.TryGetValue(envName, out var envTokens) && envTokens.TryGetValue(tokenId, out var cachedTokenInfo))
                     return new CallResult<PolymarketOrderBook>(cachedTokenInfo); // Already have this token data

@@ -11,17 +11,17 @@ namespace Polymarket.Net.Enums
     public enum OrderStatus
     {
         /// <summary>
-        /// Live
+        /// ["<c>LIVE</c>"] Live
         /// </summary>
         [Map("LIVE")]
         Live,
         /// <summary>
-        /// Canceled
+        /// ["<c>CANCELED</c>"] Canceled
         /// </summary>
         [Map("CANCELED")]
         Canceled,
         /// <summary>
-        /// Matched
+        /// ["<c>MATCHED</c>"] Matched
         /// </summary>
         [Map("MATCHED")]
         Matched

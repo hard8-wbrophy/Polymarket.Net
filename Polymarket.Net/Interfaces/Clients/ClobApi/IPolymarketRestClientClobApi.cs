@@ -7,7 +7,7 @@ namespace Polymarket.Net.Interfaces.Clients.ClobApi
     /// <summary>
     /// Polymarket Clob API endpoints
     /// </summary>
-    public interface IPolymarketRestClientClobApi : IRestApiClient, IDisposable
+    public interface IPolymarketRestClientClobApi : IRestApiClient<PolymarketCredentials>, IDisposable
     {
         /// <summary>
         /// Client options

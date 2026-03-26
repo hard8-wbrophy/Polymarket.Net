@@ -1,10 +1,4 @@
-﻿using Polymarket.Net.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace Polymarket.Net.Objects.Models
 {
@@ -14,32 +8,32 @@ namespace Polymarket.Net.Objects.Models
     public record PolymarketBookUpdate : PolymarketSocketUpdate
     {
         /// <summary>
-        /// Market id
+        /// ["<c>market</c>"] Market id
         /// </summary>
         [JsonPropertyName("market")]
         public string Market { get; set; } = string.Empty;
         /// <summary>
-        /// Asset id
+        /// ["<c>asset_id</c>"] Asset id
         /// </summary>
         [JsonPropertyName("asset_id")]
         public string AssetId { get; set; } = string.Empty;
         /// <summary>
-        /// Hash
+        /// ["<c>hash</c>"] Hash
         /// </summary>
         [JsonPropertyName("hash")]
         public string Hash { get; set; } = string.Empty;
         /// <summary>
-        /// Last trade price
+        /// ["<c>last_trade_price</c>"] Last trade price
         /// </summary>
         [JsonPropertyName("last_trade_price")]
-        public decimal LastTradePrice { get; set; }
+        public decimal? LastTradePrice { get; set; }
         /// <summary>
-        /// Bids
+        /// ["<c>bids</c>"] Bids
         /// </summary>
         [JsonPropertyName("bids")]
         public PolymarketBookEntry[] Bids { get; set; } = [];
         /// <summary>
-        /// Asks
+        /// ["<c>asks</c>"] Asks
         /// </summary>
         [JsonPropertyName("asks")]
         public PolymarketBookEntry[] Asks { get; set; } = [];

@@ -11,12 +11,12 @@ namespace Polymarket.Net.Enums
     public enum TradeRole
     {
         /// <summary>
-        /// Taker
+        /// ["<c>TAKER</c>"] Taker
         /// </summary>
         [Map("TAKER")]
         Taker,
         /// <summary>
-        /// Maker
+        /// ["<c>MAKER</c>"] Maker
         /// </summary>
         [Map("MAKER")]
         Maker
